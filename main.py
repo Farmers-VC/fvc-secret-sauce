@@ -18,7 +18,7 @@ def test_balancer() -> None:
     POOL_ADDRESS = '0x59a19d8c652fa0284f44113d0ff9aba70bd46fb4'
     TOKEN_IN_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
     TOKEN_OUT_ADDRESS = '0xba100000625a3754423978a60c9317c58a424e3D'
-    WETH_AMOUNT_IN = '1000'
+    WETH_AMOUNT_IN = '10000'
     eth_svc = Ethereum(ETHEREUM_WS_URI)
     contract = eth_svc.init_contract(POOL_ADDRESS, ContractTypeEnum.BPOOL)
     exchange = ExchangeFactory.create(contract, ContractTypeEnum.BPOOL)
