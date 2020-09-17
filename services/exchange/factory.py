@@ -1,6 +1,7 @@
 from web3.eth import Contract
 
 from services.exchange.balancer import BalancerExchange
+from services.exchange.balancer_proxy import BalancerProxyExchange
 from services.exchange.iexchange import ExchangeInterface
 from services.exchange.sushiswap import SushiSwapExchange
 from services.exchange.uniswap import UniswapExchange
@@ -16,4 +17,6 @@ class ExchangeFactory:
             return UniswapExchange(contract)
         if contract_type == ContractTypeEnum.SUSHISWAP:
             return SushiSwapExchange(contract)
+        if contract_type == ContractTypeEnum.BALANCER_PROXY:
+            return BalancerProxyExchange(contract)
         raise Exception('Exchange not supported.')

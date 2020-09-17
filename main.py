@@ -15,15 +15,24 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 
 def main() -> None:
     pools = load_all_pools()
+    # test_balancer(pools[1])
     w3 = _init_web3()
+    # test_balancer_proxy(pools[0], w3)
     algo = Algo(pools, w3)
     algo.find_arbitrage()
-    # test_balancer(pools[1])
     # test_uniswap(pools[-1])
 
 
 def _init_web3() -> Web3:
     return Web3(Web3.WebsocketProvider(ETHEREUM_WS_URI))
+
+def test_balancer_proxy(pool, w3) -> None:
+    WETH_AMOUNT_IN = Web3.toWei('100', 'ether')
+    eth_svc = Ethereum(w3)
+    contract = eth_svc.init_contract(pool)
+    exchange = ExchangeFactory.create(contract, pool.type)
+    amount_out_wei = exchange.calc_amount_out(pool.tokens[0], pool.tokens[1], WETH_AMOUNT_IN)
+    print('Balancer Out', pool.tokens[1].from_wei(amount_out_wei))
 
 
 def test_balancer(pool) -> None:

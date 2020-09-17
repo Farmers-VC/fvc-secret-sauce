@@ -1,7 +1,9 @@
+import random
 import sys
 import time
 from typing import Dict, List
 
+from colored import fg, stylize
 from web3 import Web3
 
 from services.ethereum.ethereum import Ethereum
@@ -30,7 +32,8 @@ class Algo:
     def find_arbitrage(self) -> None:
         while True:
             time.sleep(0.5)
-            WETH_AMOUNT_IN = Web3.toWei('5', 'ether')
+            rand_eth = str(random.uniform(1.0, 25.0))
+            WETH_AMOUNT_IN = Web3.toWei(rand_eth, 'ether')
             for weth_pool_1 in self.weth_pools:
                 print('----------------------- NEW PATH ------------------------')
                 token_in_1, token_out_1 = weth_pool_1.get_token_pair_from_token_in('WETH')
@@ -46,7 +49,12 @@ class Algo:
                                     amount_out_wei_3 = self.exchange_by_pool_address[weth_pool_3.address].calc_amount_out(token_in_3, token_out_3, amount_out_wei_2)
                                     if token_out_3.name != 'WETH':
                                         raise Exception('Last exchange should results in WETH.')
-                                    if amount_out_wei_3 > WETH_AMOUNT_IN:
+                                    arbitrage_amount = token_out_3.from_wei(amount_out_wei_3 - WETH_AMOUNT_IN)
+                                    if arbitrage_amount > 0:
+                                        print(stylize(f'Arbitrage: {arbitrage_amount}', fg('green')))
+                                    else:
+                                        print(stylize(f'Arbitrage: {arbitrage_amount}', fg('red')))
+                                    if amount_out_wei_3 > (WETH_AMOUNT_IN + Web3.toWei(0.1, 'ether')):
                                         print('-----------------------------------------------------------')
                                         print('------------------- ARBITRAGE DETECTED --------------------')
                                         print('-----------------------------------------------------------')
