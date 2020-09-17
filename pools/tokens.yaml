@@ -1,0 +1,17 @@
+tokens:
+  - name: WETH
+    address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+    decimal: 18
+  - name: ULU
+    address: '0x035bfe6057E15Ea692c0DfdcaB3BB41a64Dd2aD4'
+    decimal: 18
+  - name: BAL
+    address: '0xba100000625a3754423978a60c9317c58a424e3D'
+    decimal: 18
+  - name: DAI
+    address: '0x6B175474E89094C44Da98b954EedeAC495271d0F'
+    decimal: 18
+  - name: USDT
+    address: '0xdac17f958d2ee523a2206206994597c13d831ec7'
+    decimal: 6
+

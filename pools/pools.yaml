@@ -1,0 +1,36 @@
+pools:
+  - name: 'WETH/ULU 95/5'
+    type: BPOOL
+    address: '0xb50961e3d6128fb746ffdc6054046d873194376d'
+    tokens: ['WETH', 'ULU']
+  - name: 'WETH/BAL 20/80'
+    type: BPOOL
+    address: '0x59a19d8c652fa0284f44113d0ff9aba70bd46fb4'
+    tokens: ['WETH', 'BAL']
+  - name: 'DAI/ULU 95/5'
+    type: BPOOL
+    address: '0x23C1F4CaaaB3D3C978D3A1B8BBDA22Bef0320f84'
+    tokens: ['DAI', 'ULU']
+  - name: 'DAI/BAL 50/50'
+    type: BPOOL
+    address: '0x2e41132dab88a9bad80740a1392d322bf023d494'
+    tokens: ['DAI', 'BAL']
+
+  - name: 'DAI/WETH'
+    type: UNISWAP
+    address: '0xa478c2975ab1ea89e8196811f51a7b7ade33eb11'
+    tokens: ['DAI', 'WETH']
+  - name: 'ULU/USDT'
+    type: UNISWAP
+    address: '0x3edabce650b3c1cd4493d3cd568e72c0bdf50227'
+    tokens: ['ULU', 'USDT']
+  - name: 'BAL/WETH'
+    type: UNISWAP
+    address: '0xa70d458a4d9bc0e6571565faee18a48da5c0d593'
+    tokens: ['BAL', 'WETH']
+  - name: 'WETH/USDT'
+    type: UNISWAP
+    address: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+    tokens: ['USDT', 'WETH']
+
+
