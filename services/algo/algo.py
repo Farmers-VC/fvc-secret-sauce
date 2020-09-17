@@ -1,3 +1,4 @@
+import sys
 import time
 from typing import Dict, List
 
@@ -35,13 +36,11 @@ class Algo:
                 token_in_1, token_out_1 = weth_pool_1.get_token_pair_from_token_in('WETH')
                 amount_out_wei_1 = self.exchange_by_pool_address[weth_pool_1.address].calc_amount_out(token_in_1, token_out_1, WETH_AMOUNT_IN)
                 for mix_pool_2 in self.weth_pools + self.non_weth_pools:
-                    print('--- STEP 2 ---')
                     if mix_pool_2.contain_token(token_out_1.name):
                         token_in_2, token_out_2 = mix_pool_2.get_token_pair_from_token_in(token_out_1.name)
                         amount_out_wei_2 = self.exchange_by_pool_address[mix_pool_2.address].calc_amount_out(token_in_2, token_out_2, amount_out_wei_1)
                         if token_out_2.name != 'WETH':
                             for weth_pool_3 in self.weth_pools:
-                                print('--- STEP 3 ---')
                                 if weth_pool_3.contain_token(token_out_2.name):
                                     token_in_3, token_out_3 = weth_pool_3.get_token_pair_from_token_in(token_out_2.name)
                                     amount_out_wei_3 = self.exchange_by_pool_address[weth_pool_3.address].calc_amount_out(token_in_3, token_out_3, amount_out_wei_2)
@@ -51,5 +50,6 @@ class Algo:
                                         print('-----------------------------------------------------------')
                                         print('------------------- ARBITRAGE DETECTED --------------------')
                                         print('-----------------------------------------------------------')
+                                        sys.exit(1)
 
     # def one_exchange(self, steps: int) -> None:

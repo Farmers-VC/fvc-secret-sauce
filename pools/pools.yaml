@@ -15,6 +15,10 @@ pools:
     type: BPOOL
     address: '0x2e41132dab88a9bad80740a1392d322bf023d494'
     tokens: ['DAI', 'BAL']
+  - name: 'SUSHI/ULU 95/5'
+    type: BPOOL
+    address: '0xBe0e4E74897275F5e5a0a184B112B20860aD4FAC'
+    tokens: ['SUSHI', 'ULU']
 
   - name: 'DAI/WETH'
     type: UNISWAP
@@ -32,5 +36,12 @@ pools:
     type: UNISWAP
     address: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
     tokens: ['USDT', 'WETH']
+  - name: 'WETH/SUSHI'
+    type: UNISWAP
+    address: '0xce84867c3c02b05dc570d0135103d3fb9cc19433'
+    tokens: ['SUSHI', 'WETH']
 
-
+  - name: 'SUSHI/WETH'
+    type: SUSHISWAP
+    address: '0x795065dcc9f64b5614c407a6efdc400da6221fb0'
+    tokens: ['SUSHI', 'WETH']

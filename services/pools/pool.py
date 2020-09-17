@@ -8,7 +8,7 @@ class Pool:
     def __init__(self, name: str, pool_type: str, address: str, tokens: List[Token]) -> None:
         self.name = name
         self.type = ContractTypeEnum[pool_type]
-        self.address = address
+        self.address = address.lower()
         self.tokens = tokens
 
     @property

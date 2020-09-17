@@ -36,6 +36,8 @@ class Ethereum:
             json_file = 'bpool_abi.json'
         if contract_type == ContractTypeEnum.UNISWAP:
             json_file = 'uniswap_pair_abi.json'
+        if contract_type == ContractTypeEnum.SUSHISWAP:
+            json_file = 'uniswap_pair_abi.json'
         with open(os.path.join(THIS_DIR, f'abi/{json_file}')) as f:
             contract_abi = json.load(f)
             return contract_abi
