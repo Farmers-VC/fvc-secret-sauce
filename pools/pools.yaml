@@ -11,18 +11,18 @@ pools:
     type: BPOOL
     address: '0x59a19d8c652fa0284f44113d0ff9aba70bd46fb4'
     tokens: ['WETH', 'BAL']
-  - name: 'DAI/ULU 95/5'
-    type: BPOOL
-    address: '0x23C1F4CaaaB3D3C978D3A1B8BBDA22Bef0320f84'
-    tokens: ['DAI', 'ULU']
+  # - name: 'DAI/ULU 95/5'
+  #   type: BPOOL
+  #   address: '0x23C1F4CaaaB3D3C978D3A1B8BBDA22Bef0320f84'
+  #   tokens: ['DAI', 'ULU']
   - name: 'DAI/BAL 50/50'
     type: BPOOL
     address: '0x2e41132dab88a9bad80740a1392d322bf023d494'
     tokens: ['DAI', 'BAL']
-  - name: 'SUSHI/ULU 95/5'
-    type: BPOOL
-    address: '0xBe0e4E74897275F5e5a0a184B112B20860aD4FAC'
-    tokens: ['SUSHI', 'ULU']
+  # - name: 'SUSHI/ULU 95/5'
+  #   type: BPOOL
+  #   address: '0xBe0e4E74897275F5e5a0a184B112B20860aD4FAC'
+  #   tokens: ['SUSHI', 'ULU']
   - name: 'WETH/YFV 98/2'
     type: BPOOL
     address: '0x10dd17ecfc86101eab956e0a443cab3e9c62d9b4'
