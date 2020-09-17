@@ -62,5 +62,17 @@ class Algo:
                                         print('------------------- ARBITRAGE DETECTED --------------------')
                                         print('-----------------------------------------------------------')
                                         self.twilio.send_message(f'Arbitrage Opportunity: +{arbitrage_amount} ETH')
+                        else:
+                            arbitrage_amount = token_out_2.from_wei(amount_out_wei_2 - WETH_AMOUNT_IN)
+                            if arbitrage_amount > 0:
+                                print(stylize(f'Arbitrage: {arbitrage_amount}', fg('green')))
+                            else:
+                                print(stylize(f'Arbitrage: {arbitrage_amount}', fg('red')))
+                            if amount_out_wei_2 > (WETH_AMOUNT_IN + Web3.toWei(0.2, 'ether')):
+                                print('-----------------------------------------------------------')
+                                print('------------------- ARBITRAGE DETECTED --------------------')
+                                print('-----------------------------------------------------------')
+                                self.twilio.send_message(f'Arbitrage Opportunity: +{arbitrage_amount} ETH')
+
 
     # def one_exchange(self, steps: int) -> None:
