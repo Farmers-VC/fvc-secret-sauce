@@ -12,7 +12,7 @@ class PoolLoader:
     def load_uniswap_pools() -> List[Pool]:
         query = """
         {
-            pairs(first: 1000, orderBy: volumeUSD, orderDirection: desc){
+            pairs(first: 1000, where: {reserveUSD_gt: 50000}, orderBy: volumeUSD, orderDirection: desc){
                 id
                 token0 {
                   id
