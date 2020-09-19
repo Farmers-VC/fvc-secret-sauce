@@ -59,7 +59,7 @@ class PoolLoader:
     def load_balancer_pools() -> List[Pool]:
         query = """
         {
-          pools(first: 1000, where: {publicSwap: true, tokensCount:2}, orderBy: totalSwapVolume, orderDirection: desc) {
+          pools(first: 1000, where: {publicSwap: true, tokensCount:2, liquidity_gt: 50000}, orderBy: totalSwapVolume, orderDirection: desc) {
             id
             tokens {
               address
