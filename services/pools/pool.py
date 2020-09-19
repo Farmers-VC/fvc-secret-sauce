@@ -18,19 +18,21 @@ class Pool:
         token_names = [token.name for token in self.tokens]
         return "WETH" in token_names
 
-    def contain_token(self, token_name: str) -> bool:
+    def contain_token(self, token_address: str) -> bool:
         for token in self.tokens:
-            if token_name.lower() == token.name.lower():
+            if token_address.lower() == token.address.lower():
                 return True
         return False
 
-    def get_token_pair_from_token_in(self, token_in_name: str) -> Tuple[Token, Token]:
-        if not self.contain_token(token_in_name):
+    def get_token_pair_from_token_in(
+        self, token_in_address: str
+    ) -> Tuple[Token, Token]:
+        if not self.contain_token(token_in_address):
             raise Exception(
-                f"Token {token_in_name} in is not included in the token pair"
+                f"Token {token_in_address} in is not included in the token pair"
             )
 
-        if self.tokens[0].name.lower() == token_in_name.lower():
+        if self.tokens[0].address.lower() == token_in_address.lower():
             return self.tokens[0], self.tokens[1]
         else:
             return self.tokens[1], self.tokens[0]

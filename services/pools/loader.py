@@ -1,8 +1,8 @@
-import json
 from typing import Dict, List
 
 import requests
 import yaml
+
 from services.pools.pool import Pool
 from services.pools.token import Token
 

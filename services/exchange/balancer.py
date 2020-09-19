@@ -32,7 +32,9 @@ class BalancerExchange(ExchangeInterface):
             amount_in_wei,
             self.swap_fee,
         ).call()
-        # print(f'[BPOOL] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}')
+        # print(
+        #     f"[BPOOL] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}"
+        # )
         return amount_out_wei
 
     def calc_amount_out_proxy(

@@ -14,7 +14,9 @@ class UniswapExchange(ExchangeInterface):
     ) -> int:
         """Calculate the amount out (in Wei) based on `amount_in` (in Wei). """
         amount_out_wei = self._calc_amount_out(token_in, token_out, amount_in_wei)
-        # print(f'[Uniswap] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}')
+        # print(
+        #     f"[Uniswap] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}"
+        # )
         return amount_out_wei
 
     def _calc_amount_out(

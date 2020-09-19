@@ -1,10 +1,7 @@
-from web3 import Web3
-
-
 class Token:
     def __init__(self, name: str, address: str, decimal: int) -> None:
         self.name = name
-        self.address = Web3.toChecksumAddress(address)
+        self.address = address.lower()
         self.decimal = decimal
 
     def to_wei(self, amount: float) -> int:
