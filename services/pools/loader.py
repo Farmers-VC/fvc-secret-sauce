@@ -12,7 +12,7 @@ class PoolLoader:
     def load_uniswap_pools() -> List[Pool]:
         query = """
         {
-            pairs(first: 10, orderBy: volumeUSD, orderDirection: desc){
+            pairs(first: 1000, orderBy: volumeUSD, orderDirection: desc){
                 id
                 token0 {
                   id
@@ -49,6 +49,47 @@ class PoolLoader:
                             name=pair["token1"]["symbol"],
                             address=pair["token1"]["id"],
                             decimal=int(pair["token1"]["decimals"]),
+                        ),
+                    ],
+                )
+            )
+        return pools
+
+    @staticmethod
+    def load_balancer_pools() -> List[Pool]:
+        query = """
+        {
+          pools(first: 1, where: {publicSwap: true}, orderBy: totalSwapVolume, orderDirection: desc) {
+            id
+            tokens {
+              address
+              decimals
+              symbol
+            }
+          }
+        }
+
+        """
+        url = "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer"
+        resp = requests.post(url, json={"query": query})
+        pairs = resp.json()["data"]["pools"]
+        pools: List[Pool] = []
+        for pair in pairs:
+            pools.append(
+                Pool(
+                    name=f"{pair['tokens'][0]['symbol']}/{pair['tokens'][1]['symbol']}",
+                    pool_type="BPOOL",
+                    address=pair["id"],
+                    tokens=[
+                        Token(
+                            name=pair["tokens"][0]["symbol"],
+                            address=pair["tokens"][0]["address"],
+                            decimal=int(pair["tokens"][0]["decimals"]),
+                        ),
+                        Token(
+                            name=pair["tokens"][1]["symbol"],
+                            address=pair["tokens"][1]["address"],
+                            decimal=int(pair["tokens"][1]["decimals"]),
                         ),
                     ],
                 )
