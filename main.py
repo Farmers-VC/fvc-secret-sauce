@@ -28,12 +28,12 @@ def _init_web3() -> Web3:
 
 def load_all_pools():
     uniswap_pools = PoolLoader.load_uniswap_pools()
-    # balancer_pools = PoolLoader.load_balancer_pools()
+    balancer_pools = PoolLoader.load_balancer_pools()
     token_yaml_path = os.path.join(THIS_DIR, f"pools/tokens.yaml")
     pools_yaml_path = os.path.join(THIS_DIR, f"pools/pools.yaml")
     yaml_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
-    # return uniswap_pools + balancer_pools + yaml_pools
-    return uniswap_pools + yaml_pools
+    return uniswap_pools + balancer_pools + yaml_pools
+    # return uniswap_pools + yaml_pools
 
 
 main()
