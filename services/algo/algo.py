@@ -205,7 +205,6 @@ class Algo:
                     WETH_AMOUNT_IN, amount_out_wei, token_out, arbitrage_path
                 )
             print("--- Ended in %s seconds ---" % (time.time() - start_time))
-            time.sleep(5)
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int

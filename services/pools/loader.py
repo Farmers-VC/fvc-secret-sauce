@@ -56,6 +56,47 @@ class PoolLoader:
         return pools
 
     @staticmethod
+    def load_balancer_pools() -> List[Pool]:
+        query = """
+        {
+          pools(first: 500, where: {publicSwap: true}, orderBy: totalSwapVolume, orderDirection: desc) {
+            id
+            tokens {
+              address
+              decimals
+              symbol
+            }
+          }
+        }
+
+        """
+        url = "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer"
+        resp = requests.post(url, json={"query": query})
+        pairs = resp.json()["data"]["pools"]
+        pools: List[Pool] = []
+        for pair in pairs:
+            pools.append(
+                Pool(
+                    name=f"{pair['tokens'][0]['symbol']}/{pair['tokens'][1]['symbol']}",
+                    pool_type="BPOOL",
+                    address=pair["id"],
+                    tokens=[
+                        Token(
+                            name=pair["tokens"][0]["symbol"],
+                            address=pair["tokens"][0]["address"],
+                            decimal=int(pair["tokens"][0]["decimals"]),
+                        ),
+                        Token(
+                            name=pair["tokens"][1]["symbol"],
+                            address=pair["tokens"][1]["address"],
+                            decimal=int(pair["tokens"][1]["decimals"]),
+                        ),
+                    ],
+                )
+            )
+        return pools
+
+    @staticmethod
     def load_pools_yaml(token_path: str, pool_path: str) -> List[Pool]:
         tokens = _load_tokens_yaml(token_path)
         pools = _load_pools_yaml(pool_path, tokens)
