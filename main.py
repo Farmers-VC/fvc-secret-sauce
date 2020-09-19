@@ -16,7 +16,7 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 
 def main() -> None:
     pools = load_all_pools()
-    breakpoint()
+    # breakpoint()
     w3 = _init_web3()
     # breakpoint()
     algo = Algo(pools, w3)
@@ -28,11 +28,12 @@ def _init_web3() -> Web3:
 
 
 def load_all_pools():
-    uniswap_pools = PoolLoader.load_uniswap_pools(1000)
+    uniswap_pools = PoolLoader.load_uniswap_pools()
     # token_yaml_path = os.path.join(THIS_DIR, f"pools/tokens.yaml")
     # pools_yaml_path = os.path.join(THIS_DIR, f"pools/pools.yaml")
-    # balancer_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
+    # yaml_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
     return uniswap_pools
+    # return yaml_pools
 
 
 main()

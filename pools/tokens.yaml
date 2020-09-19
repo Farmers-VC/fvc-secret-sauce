@@ -32,4 +32,42 @@ tokens:
   - name: RPL
     address: '0xb4efd85c19999d84251304bda99e90b92300bd93'
     decimal: 18
-
+  - name: sUSD
+    address: '0x57ab1ec28d129707052df4df418d58a2d46d5f51'
+    decimal: 18
+  - name: BASED
+    address: '0x68A118Ef45063051Eac49c7e647CE5Ace48a68a5'
+    decimal: 18
+  - name: USDC
+    address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+    decimal: 6
+  - name: LEND
+    address: '0x80fb784b7ed66730e8b1dbd9820afd29931aab03'
+    decimal: 18
+  - name: COMP
+    address: '0xc00e94cb662c3520282e6f5717214004a7f26888'
+    decimal: 18
+  - name: SNX
+    address: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f'
+    decimal: 18
+  - name: UMA
+    address: '0x04fa0d235c4abf4bcf4787af4cf447de572ef828'
+    decimal: 18
+  - name: BAND
+    address: '0xba11d00c5f74255f56a5e366f4f77f5a186d7f55'
+    decimal: 18
+  - name: AMPL
+    address: '0xd46ba6d942050d489dbd938a2c909a5d5039a161'
+    decimal: 9
+  - name: REN
+    address: '0x408e41876cccdc0f92210600ef50372656052a38'
+    decimal: 18
+  - name: SRM
+    address: '0x476c5e26a75bd202a9683ffd34359c0cc15be0ff'
+    decimal: 6
+  - name: CRV
+    address: '0xd533a949740bb3306d119cc777fa900ba034cd52'
+    decimal: 18
+  - name: YAMv2
+    address: '0xaba8cac6866b83ae4eec97dd07ed254282f6ad8a'
+    decimal: 24

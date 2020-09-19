@@ -1,8 +1,8 @@
-import json
 from typing import Dict, List
 
 import requests
 import yaml
+
 from services.pools.pool import Pool
 from services.pools.token import Token
 
@@ -12,7 +12,7 @@ class PoolLoader:
     def load_uniswap_pools() -> List[Pool]:
         query = """
         {
-            pairs(first: 10, orderBy: volumeUSD, orderDirection: desc){
+            pairs(first: 1000, orderBy: volumeUSD, orderDirection: desc){
                 id
                 token0 {
                   id

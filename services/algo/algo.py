@@ -17,7 +17,8 @@ from services.twilio.twilio import TwilioService
 
 MAX_STEP_SUPPORTED = 3
 WETH_AMOUNT_IN = Web3.toWei("1.0", "ether")
-ORIGIN_TOKEN_IN = "WETH"
+WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".lower()
+ORIGIN_TOKEN_IN_ADDRESS = WETH_ADDRESS.lower()
 
 
 class Algo:
@@ -28,7 +29,7 @@ class Algo:
         self.pools_by_token: Dict[str, List[Pool]] = defaultdict(list)
         for pool in self.pools:
             for token in pool.tokens:
-                self.pools_by_token[token.name].append(pool)
+                self.pools_by_token[token.address.lower()].append(pool)
         self.twilio = TwilioService()
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
@@ -41,13 +42,13 @@ class Algo:
         return exchange_by_pool_address
 
     def _safety_checks(self, step: int, token_in: Token, token_out: Token) -> None:
-        if step == 1 and token_in.name != "WETH":
+        if step == 1 and token_in.address != WETH_ADDRESS:
             raise Exception("Only support entry with WETH")
-        if step == 2 and token_in.name == "WETH":
+        if step == 2 and token_in.address == WETH_ADDRESS:
             raise Exception("Step 2 should never be WETH as a token_in")
-        if step == 3 and token_in.name == "WETH":
+        if step == 3 and token_in.address == WETH_ADDRESS:
             raise Exception("Step 3 should never be WETH as a token_in")
-        if step == MAX_STEP_SUPPORTED and token_out.name != "WETH":
+        if step == MAX_STEP_SUPPORTED and token_out.address != WETH_ADDRESS:
             raise Exception("Last step should always result in WETH")
         if step > MAX_STEP_SUPPORTED:
             raise Exception("We only supported MAX_STEP_SUPPORTED")
@@ -60,7 +61,7 @@ class Algo:
         arbitrage_path: ArbitragePath,
         iteration=0,
     ) -> None:
-        if token_out.name == "WETH":
+        if token_out.address == WETH_ADDRESS:
             arbitrage_amount = token_out.from_wei(
                 amount_out_wei - original_amount_in_wei
             )
@@ -124,15 +125,15 @@ class Algo:
         self, step: int, token_in: Token, previous_pool: Pool = None
     ) -> List[List[ConnectingPath]]:
         """Given a Token in, find all connecting paths from the list of all Pools avaivable"""
-        if token_in.name == "WETH" or step > MAX_STEP_SUPPORTED:
+        if token_in.address == WETH_ADDRESS or step > MAX_STEP_SUPPORTED:
             # Means that we're already returning a WETH or we're about `MAX_STEP_SUPPORTED`
             return []
         all_connecting_paths: List[List[ConnectingPath]] = []
         end_weth_path_found = False
-        for pool in self.pools_by_token[token_in.name]:
-            _, token_out = pool.get_token_pair_from_token_in(token_in.name)
+        for pool in self.pools_by_token[token_in.address]:
+            _, token_out = pool.get_token_pair_from_token_in(token_in.address)
             if (previous_pool and pool.address == previous_pool.address) or (
-                step == MAX_STEP_SUPPORTED and token_out.name != "WETH"
+                step == MAX_STEP_SUPPORTED and token_out.address != WETH_ADDRESS
             ):
                 continue
 
@@ -165,9 +166,9 @@ class Algo:
 
     def find_all_paths(self) -> List[ArbitragePath]:
         all_arbitrage_paths: List[ArbitragePath] = []
-        for weth_pool in self.pools_by_token[ORIGIN_TOKEN_IN]:
+        for weth_pool in self.pools_by_token[ORIGIN_TOKEN_IN_ADDRESS]:
             token_in, token_out = weth_pool.get_token_pair_from_token_in(
-                ORIGIN_TOKEN_IN
+                ORIGIN_TOKEN_IN_ADDRESS
             )
             self._safety_checks(
                 1,
@@ -192,8 +193,10 @@ class Algo:
 
     def scan_arbitrage(self):
         arbitrage_paths: List[ArbitragePath] = self.find_all_paths()
+        breakpoint()
 
         while True:
+            start_time = time.time()
             for arbitrage_path in arbitrage_paths:
                 token_out, amount_out_wei = self._calculate_single_path_arbitrage(
                     arbitrage_path, WETH_AMOUNT_IN
@@ -201,6 +204,7 @@ class Algo:
                 self._analyze_arbitrage(
                     WETH_AMOUNT_IN, amount_out_wei, token_out, arbitrage_path
                 )
+            print("--- Ended in %s seconds ---" % (time.time() - start_time))
             time.sleep(5)
 
     def _calculate_single_path_arbitrage(
@@ -210,7 +214,7 @@ class Algo:
             token_out, amount_out_wei = self._simulate_one_exchange(
                 connecting_path.pool, connecting_path.token_in, amount_in_wei
             )
-            if token_out.name.lower() != connecting_path.token_out.name.lower():
+            if token_out.address.lower() != connecting_path.token_out.address.lower():
                 raise Exception("Token out problem")
             amount_in_wei = amount_out_wei
         return token_out, amount_out_wei
@@ -218,7 +222,7 @@ class Algo:
     def _simulate_one_exchange(
         self, pool: Pool, token_in: Token, amount_in_wei: int
     ) -> Tuple[Token, int]:
-        _, token_out = pool.get_token_pair_from_token_in(token_in.name)
+        _, token_out = pool.get_token_pair_from_token_in(token_in.address)
         amount_out_wei = self.exchange_by_pool_address[pool.address].calc_amount_out(
             token_in, token_out, amount_in_wei
         )
