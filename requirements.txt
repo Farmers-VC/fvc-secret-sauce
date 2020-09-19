@@ -1,3 +1,5 @@
 web3==5.12.1
 click==7.1.2
 pyyaml==5.3.1
+colored==1.4.2
+twilio==6.45.0

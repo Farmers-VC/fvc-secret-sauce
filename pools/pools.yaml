@@ -1,47 +1,76 @@
 pools:
-  - name: 'WETH/ULU 95/5'
-    type: BPOOL
-    address: '0xb50961e3d6128fb746ffdc6054046d873194376d'
-    tokens: ['WETH', 'ULU']
+  # - name: 'WETH/ULU'
+  #   type: BALANCER_PROXY
+  #   address: '0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21'
+  #   tokens: ['WETH', 'ULU']
+  # - name: 'WETH/ULU 95/5'
+  #   type: BPOOL
+  #   address: '0xb50961e3d6128fb746ffdc6054046d873194376d'
+  #   tokens: ['WETH', 'ULU']
   - name: 'WETH/BAL 20/80'
     type: BPOOL
     address: '0x59a19d8c652fa0284f44113d0ff9aba70bd46fb4'
     tokens: ['WETH', 'BAL']
-  - name: 'DAI/ULU 95/5'
-    type: BPOOL
-    address: '0x23C1F4CaaaB3D3C978D3A1B8BBDA22Bef0320f84'
-    tokens: ['DAI', 'ULU']
+  # - name: 'DAI/ULU 95/5'
+  #   type: BPOOL
+  #   address: '0x23C1F4CaaaB3D3C978D3A1B8BBDA22Bef0320f84'
+  #   tokens: ['DAI', 'ULU']
   - name: 'DAI/BAL 50/50'
     type: BPOOL
     address: '0x2e41132dab88a9bad80740a1392d322bf023d494'
     tokens: ['DAI', 'BAL']
-  - name: 'SUSHI/ULU 95/5'
+  # - name: 'SUSHI/ULU 95/5'
+  #   type: BPOOL
+  #   address: '0xBe0e4E74897275F5e5a0a184B112B20860aD4FAC'
+  #   tokens: ['SUSHI', 'ULU']
+  - name: 'WETH/YFV 98/2'
     type: BPOOL
-    address: '0xBe0e4E74897275F5e5a0a184B112B20860aD4FAC'
-    tokens: ['SUSHI', 'ULU']
+    address: '0x10dd17ecfc86101eab956e0a443cab3e9c62d9b4'
+    tokens: ['YFV', 'WETH']
+  - name: 'LINK/YFV 98/2'
+    type: BPOOL
+    address: '0x4b0b0bf60abbf79a2fd028e4d52ac393982488ce'
+    tokens: ['LINK', 'YFV']
+  - name: 'WETH/LINK 50/50'
+    type: BPOOL
+    address: '0x77f5f3dfd95d0b061c9ef47c4f4ca4681d807776'
+    tokens: ['LINK', 'WETH']
 
   - name: 'DAI/WETH'
     type: UNISWAP
     address: '0xa478c2975ab1ea89e8196811f51a7b7ade33eb11'
     tokens: ['DAI', 'WETH']
-  - name: 'ULU/USDT'
-    type: UNISWAP
-    address: '0x3edabce650b3c1cd4493d3cd568e72c0bdf50227'
-    tokens: ['ULU', 'USDT']
+  # - name: 'ULU/USDT'
+  #   type: UNISWAP
+  #   address: '0x3edabce650b3c1cd4493d3cd568e72c0bdf50227'
+  #   tokens: ['ULU', 'USDT']
   - name: 'BAL/WETH'
     type: UNISWAP
     address: '0xa70d458a4d9bc0e6571565faee18a48da5c0d593'
     tokens: ['BAL', 'WETH']
-  - name: 'WETH/USDT'
-    type: UNISWAP
-    address: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
-    tokens: ['USDT', 'WETH']
+  # - name: 'WETH/USDT'
+  #   type: UNISWAP
+  #   address: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+  #   tokens: ['USDT', 'WETH']
   - name: 'WETH/SUSHI'
     type: UNISWAP
     address: '0xce84867c3c02b05dc570d0135103d3fb9cc19433'
     tokens: ['SUSHI', 'WETH']
+  - name: 'YFV/WETH'
+    type: UNISWAP
+    address: '0xcb4f983e705caeb7217c5c3785001cb138115f0b'
+    tokens: ['YFV', 'WETH']
+  - name: 'LINK/WETH'
+    type: UNISWAP
+    address: '0xa2107fa5b38d9bbd2c461d6edf11b11a50f6b974'
+    tokens: ['LINK', 'WETH']
+
 
   - name: 'SUSHI/WETH'
     type: SUSHISWAP
     address: '0x795065dcc9f64b5614c407a6efdc400da6221fb0'
     tokens: ['SUSHI', 'WETH']
+  - name: 'LINK/WETH'
+    type: SUSHISWAP
+    address: '0xc40d16476380e4037e6b1a2594caf6a6cc8da967'
+    tokens: ['LINK', 'WETH']
