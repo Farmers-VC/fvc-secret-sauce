@@ -30,7 +30,7 @@ class Algo:
     def find_arbitrage(self) -> None:
         while True:
             time.sleep(0.5)
-            WETH_AMOUNT_IN = Web3.toWei('5', 'ether')
+            WETH_AMOUNT_IN = Web3.toWei('1', 'ether')
             for weth_pool_1 in self.weth_pools:
                 print('----------------------- NEW PATH ------------------------')
                 token_in_1, token_out_1 = weth_pool_1.get_token_pair_from_token_in('WETH')
@@ -50,6 +50,6 @@ class Algo:
                                         print('-----------------------------------------------------------')
                                         print('------------------- ARBITRAGE DETECTED --------------------')
                                         print('-----------------------------------------------------------')
-                                        sys.exit(1)
+                                        # sys.exit(1)
 
     # def one_exchange(self, steps: int) -> None:
