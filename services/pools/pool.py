@@ -5,7 +5,9 @@ from services.ttypes.contract import ContractTypeEnum
 
 
 class Pool:
-    def __init__(self, name: str, pool_type: str, address: str, tokens: List[Token]) -> None:
+    def __init__(
+        self, name: str, pool_type: str, address: str, tokens: List[Token]
+    ) -> None:
         self.name = name
         self.type = ContractTypeEnum[pool_type]
         self.address = address.lower()
@@ -14,7 +16,7 @@ class Pool:
     @property
     def is_weth(self) -> bool:
         token_names = [token.name for token in self.tokens]
-        return 'WETH' in token_names
+        return "WETH" in token_names
 
     def contain_token(self, token_name: str) -> bool:
         for token in self.tokens:
@@ -24,7 +26,9 @@ class Pool:
 
     def get_token_pair_from_token_in(self, token_in_name: str) -> Tuple[Token, Token]:
         if not self.contain_token(token_in_name):
-            raise Exception('Token in is not included in the token pair')
+            raise Exception(
+                f"Token {token_in_name} in is not included in the token pair"
+            )
 
         if self.tokens[0].name.lower() == token_in_name.lower():
             return self.tokens[0], self.tokens[1]
