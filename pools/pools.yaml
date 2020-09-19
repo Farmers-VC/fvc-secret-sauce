@@ -44,41 +44,38 @@ pools:
     address: '0x454c1d458f9082252750ba42d60fae0887868a3b'
     tokens: ['RPL', 'WETH']
 
-
-
-
-  - name: 'DAI/WETH'
-    type: UNISWAP
-    address: '0xa478c2975ab1ea89e8196811f51a7b7ade33eb11'
-    tokens: ['DAI', 'WETH']
-  - name: 'BAL/WETH'
-    type: UNISWAP
-    address: '0xa70d458a4d9bc0e6571565faee18a48da5c0d593'
-    tokens: ['BAL', 'WETH']
-  - name: 'WETH/USDT'
-    type: UNISWAP
-    address: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
-    tokens: ['USDT', 'WETH']
-  - name: 'WETH/SUSHI'
-    type: UNISWAP
-    address: '0xce84867c3c02b05dc570d0135103d3fb9cc19433'
-    tokens: ['SUSHI', 'WETH']
-  - name: 'YFV/WETH'
-    type: UNISWAP
-    address: '0xcb4f983e705caeb7217c5c3785001cb138115f0b'
-    tokens: ['YFV', 'WETH']
-  - name: 'LINK/WETH'
-    type: UNISWAP
-    address: '0xa2107fa5b38d9bbd2c461d6edf11b11a50f6b974'
-    tokens: ['LINK', 'WETH']
-  - name: 'YFI/WETH'
-    type: UNISWAP
-    address: '0x2fdbadf3c4d5a8666bc06645b8358ab803996e28'
-    tokens: ['YFI', 'WETH']
-  - name: 'RPL/WETH'
-    type: UNISWAP
-    address: '0x70ea56e46266f0137bac6b75710e3546f47c855d'
-    tokens: ['RPL', 'WETH']
+#   - name: 'DAI/WETH'
+#     type: UNISWAP
+#     address: '0xa478c2975ab1ea89e8196811f51a7b7ade33eb11'
+#     tokens: ['DAI', 'WETH']
+#   - name: 'BAL/WETH'
+#     type: UNISWAP
+#     address: '0xa70d458a4d9bc0e6571565faee18a48da5c0d593'
+#     tokens: ['BAL', 'WETH']
+#   - name: 'WETH/USDT'
+#     type: UNISWAP
+#     address: '0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852'
+#     tokens: ['USDT', 'WETH']
+#   - name: 'WETH/SUSHI'
+#     type: UNISWAP
+#     address: '0xce84867c3c02b05dc570d0135103d3fb9cc19433'
+#     tokens: ['SUSHI', 'WETH']
+#   - name: 'YFV/WETH'
+#     type: UNISWAP
+#     address: '0xcb4f983e705caeb7217c5c3785001cb138115f0b'
+#     tokens: ['YFV', 'WETH']
+#   - name: 'LINK/WETH'
+#     type: UNISWAP
+#     address: '0xa2107fa5b38d9bbd2c461d6edf11b11a50f6b974'
+#     tokens: ['LINK', 'WETH']
+#   - name: 'YFI/WETH'
+#     type: UNISWAP
+#     address: '0x2fdbadf3c4d5a8666bc06645b8358ab803996e28'
+#     tokens: ['YFI', 'WETH']
+#   - name: 'RPL/WETH'
+#     type: UNISWAP
+#     address: '0x70ea56e46266f0137bac6b75710e3546f47c855d'
+#     tokens: ['RPL', 'WETH']
 
 
   - name: 'SUSHI/WETH'
