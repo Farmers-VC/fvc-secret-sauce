@@ -12,7 +12,7 @@ class PoolLoader:
     def load_uniswap_pools() -> List[Pool]:
         query = """
         {
-            pairs{
+            pairs(first: 10, orderBy: volumeUSD, orderDirection: desc){
                 id
                 token0 {
                   id
@@ -34,7 +34,6 @@ class PoolLoader:
         pairs = resp.json()["data"]["pairs"]
         pools: List[Pool] = []
         for pair in pairs:
-            token0 = pair["token0"]["symbol"]
             pools.append(
                 Pool(
                     name=f"{pair['token0']['symbol']}/{pair['token1']['symbol']}",
