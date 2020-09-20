@@ -1,0 +1,10 @@
+tokens:
+  - name: WETH
+    address: '0xa0f764e120459bca39db7e57a0ce975a489ab4fa'
+    decimal: 18
+  - name: YFI
+    address: '0xb53627543f356d5fbb2bbde7fc2f8b02c24c9ee6'
+    decimal: 18
+  - name: PRINT
+    address: '0xc41af604a35e0845575b8d94f2ba1b7412fdfabf'
+    decimal: 18

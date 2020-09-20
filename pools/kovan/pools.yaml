@@ -1,0 +1,14 @@
+pools:
+  - name: 'WETH/YFI'
+    type: BPOOL
+    address: '0xedc16aac84f319bf065a9f2784ff5609688c8e0e'
+    tokens: ['WETH', 'YFI']
+
+  - name: 'WETH/PRINT'
+    type: UNISWAP
+    address: '0xfb77d8fecc488335e524c2684bbeb19af1dccf1f'
+    tokens: ['PRINT', 'WETH']
+  - name: 'PRINT/YFI'
+    type: UNISWAP
+    address: '0x8d0c94a6b244c1130d2f8e58d6474239f6588cc3'
+    tokens: ['PRINT', 'YFI']

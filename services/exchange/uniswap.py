@@ -5,18 +5,20 @@ from services.pools.token import Token
 
 
 class UniswapExchange(ExchangeInterface):
-    def __init__(self, contract: Contract) -> None:
+    def __init__(self, contract: Contract, debug: bool = False) -> None:
         self.contract = contract
         self.swap_fee = 997
+        self.debug = debug
 
     def calc_amount_out(
         self, token_in: Token, token_out: Token, amount_in_wei: int
     ) -> int:
         """Calculate the amount out (in Wei) based on `amount_in` (in Wei). """
         amount_out_wei = self._calc_amount_out(token_in, token_out, amount_in_wei)
-        # print(
-        #     f"[Uniswap] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}"
-        # )
+        if self.debug:
+            print(
+                f"[Uniswap] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}"
+            )
         return amount_out_wei
 
     def _calc_amount_out(

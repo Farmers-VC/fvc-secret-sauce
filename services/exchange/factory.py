@@ -10,13 +10,15 @@ from services.ttypes.contract import ContractTypeEnum
 
 class ExchangeFactory:
     @staticmethod
-    def create(contract: Contract, contract_type: ContractTypeEnum) -> ExchangeInterface:
+    def create(
+        contract: Contract, contract_type: ContractTypeEnum, debug: bool = False
+    ) -> ExchangeInterface:
         if contract_type == ContractTypeEnum.BPOOL:
-            return BalancerExchange(contract)
+            return BalancerExchange(contract, debug)
         if contract_type == ContractTypeEnum.UNISWAP:
-            return UniswapExchange(contract)
+            return UniswapExchange(contract, debug)
         if contract_type == ContractTypeEnum.SUSHISWAP:
-            return SushiSwapExchange(contract)
+            return SushiSwapExchange(contract, debug)
         if contract_type == ContractTypeEnum.BALANCER_PROXY:
-            return BalancerProxyExchange(contract)
-        raise Exception('Exchange not supported.')
+            return BalancerProxyExchange(contract, debug)
+        raise Exception("Exchange not supported.")
