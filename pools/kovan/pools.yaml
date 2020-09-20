@@ -1,14 +1,27 @@
 pools:
-  - name: 'WETH/YFI'
+  - name: 'WETH/FAB'
     type: BPOOL
-    address: '0xedc16aac84f319bf065a9f2784ff5609688c8e0e'
-    tokens: ['WETH', 'YFI']
+    address: '0x300b65Cda47ae981cB1FC161b107a37F27176625'
+    tokens: ['WETH', 'FAB']
+  - name: 'FAB/HUY'
+    type: BPOOL
+    address: '0xeEB60Eb38188B60e3596C43B4cF5d7e5bE565296'
+    tokens: ['FAB', 'HUY']
+  - name: 'WETH/HUY'
+    type: BPOOL
+    address: '0x01AD95499b8f5a1a8265912B852534c736206bC9'
+    tokens: ['WETH', 'HUY']
 
-  - name: 'WETH/PRINT'
+
+  - name: 'WETH/FAB'
     type: UNISWAP
-    address: '0xfb77d8fecc488335e524c2684bbeb19af1dccf1f'
-    tokens: ['PRINT', 'WETH']
-  - name: 'PRINT/YFI'
+    address: '0x839b7794ecd298b9a2ba7f5351188d8e43871100'
+    tokens: ['WETH', 'FAB']
+  - name: 'HUY/FAB'
     type: UNISWAP
-    address: '0x8d0c94a6b244c1130d2f8e58d6474239f6588cc3'
-    tokens: ['PRINT', 'YFI']
+    address: '0x3a94fa6867ab32ed2b196f39c5e5460eaa9a77c0'
+    tokens: ['FAB', 'HUY']
+  - name: 'WETH/HUY'
+    type: UNISWAP
+    address: '0x71756926c61171025dfd1b49b055f36d4e297c11'
+    tokens: ['WETH', 'HUY']

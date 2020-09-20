@@ -1,10 +1,10 @@
 tokens:
   - name: WETH
-    address: '0xa0f764e120459bca39db7e57a0ce975a489ab4fa'
+    address: '0x2583407163b7f3f52f42d427f8634a7a652dc311'
     decimal: 18
-  - name: YFI
-    address: '0xb53627543f356d5fbb2bbde7fc2f8b02c24c9ee6'
+  - name: FAB
+    address: '0x39a55f1e8Ec5025deb60A38724004e21e8DC4EBE'
     decimal: 18
-  - name: PRINT
-    address: '0xc41af604a35e0845575b8d94f2ba1b7412fdfabf'
+  - name: HUY
+    address: '0x123C57DA279ECD46cca0DBCF1a145301F753255A'
     decimal: 18

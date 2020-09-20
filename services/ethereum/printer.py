@@ -6,7 +6,7 @@ from services.ethereum.ethereum import Ethereum
 from services.notifications.notifications import Notification
 from services.ttypes.arbitrage import ArbitragePath
 
-ESTIMATE_GAS_EXECUTION = 800000
+ESTIMATE_GAS_EXECUTION = 500000
 
 
 class PrinterContract:
@@ -23,7 +23,7 @@ class PrinterContract:
         self.ethereum = ethereum
         self.contract = ethereum.init_printer_contract()
         self.weth_address = (
-            "0xa0f764e120459bca39db7e57a0ce975a489ab4fa"
+            "0x2583407163b7f3f52f42d427f8634a7a652dc311"
             if kovan
             else "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ).lower()

@@ -51,7 +51,7 @@ class Ethereum:
     def init_printer_contract(self) -> Contract:
         json_file = "abi/kovan/proxy_arbitrage_abi.json" if self.kovan else ""
         printer_address = (
-            "0x2C8f655cb569db8552b436811e9C04420760DE2b" if self.kovan else ""
+            "0x80B566461c3d16B2362Be8634d88FAF40d700aB1" if self.kovan else ""
         )
         with open(os.path.join(THIS_DIR, json_file)) as f:
             contract_abi = json.load(f)

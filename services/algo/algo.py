@@ -3,10 +3,10 @@ import time
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
-import numpy
 from colored import fg, stylize
 from web3 import Web3
 
+import numpy
 from services.ethereum.ethereum import Ethereum
 from services.ethereum.printer import PrinterContract
 from services.exchange.factory import ExchangeFactory
@@ -36,7 +36,7 @@ class Algo:
         self.kovan = kovan
         self.send_tx = send_tx
         self.weth_address = (
-            "0xa0f764e120459bca39db7e57a0ce975a489ab4fa"
+            "0x2583407163B7F3F52f42d427F8634a7A652DC311"
             if self.kovan
             else "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ).lower()
