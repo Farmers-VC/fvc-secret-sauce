@@ -17,6 +17,7 @@ from services.ttypes.arbitrage import ArbitragePath, ConnectingPath
 
 MAX_STEP_SUPPORTED = 3
 WETH_AMOUNT_IN = Web3.toWei("1.0", "ether")
+MAX_WETH_AMOUNT_PER_TRADE = 5.0
 
 
 class Algo:
@@ -74,9 +75,6 @@ class Algo:
                 amount_out_wei - original_amount_in_wei
             )
             if arbitrage_amount > 0.03:
-                # print("-----------------------------------------------------------")
-                # print("------------------- ARBITRAGE DETECTED --------------------")
-                # print("-----------------------------------------------------------")
                 (
                     optimal_amount_in,
                     optimal_arbitrage_amount,
@@ -107,8 +105,9 @@ class Algo:
                     self.notification.send_slack(result_str)
                 if optimal_arbitrage_amount > 0.5:
                     self.notification.send_all_message(result_str)
-            # else:
-            #     print(stylize(f"Arbitrage: {arbitrage_amount}", fg("red")))
+            else:
+                if self.debug:
+                    print(stylize(f"Arbitrage: {arbitrage_amount}", fg("red")))
 
         else:
             raise Exception("Token out is not WETH")
@@ -123,7 +122,8 @@ class Algo:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount = arbitrage_amount
         optimal_amount_in = amount_in_wei
-        for amount in numpy.arange(1.1, 5.0, 0.10):
+        incremental_step = 1.0 if self.kovan else 0.10
+        for amount in numpy.arange(1.1, MAX_WETH_AMOUNT_PER_TRADE, incremental_step):
             test_amount_in = token_out.to_wei(amount)
             _, amount_out_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, test_amount_in
