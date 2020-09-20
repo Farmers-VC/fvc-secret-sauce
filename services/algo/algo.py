@@ -38,7 +38,7 @@ class Algo:
         for pool in self.pools:
             for token in pool.tokens:
                 self.pools_by_token[token.address.lower()].append(pool)
-        self.notification = Notification()
+        self.notification = Notification(kovan=self.kovan)
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
         exchange_by_pool_address = {}
@@ -225,7 +225,7 @@ class Algo:
                 )
             print("--- Ended in %s seconds ---" % (time.time() - start_time))
             if self.kovan:
-                time.sleep(3)
+                time.sleep(5)
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int
