@@ -8,6 +8,7 @@ from colored import fg, stylize
 from web3 import Web3
 
 from services.ethereum.ethereum import Ethereum
+from services.ethereum.printer import PrinterContract
 from services.exchange.factory import ExchangeFactory
 from services.exchange.iexchange import ExchangeInterface
 from services.notifications.notifications import Notification
@@ -22,10 +23,14 @@ MAX_WETH_AMOUNT_PER_TRADE = 5.0
 
 class Algo:
     def __init__(
-        self, pools: List[Pool], w3: Web3, kovan: bool = False, debug: bool = False
+        self,
+        pools: List[Pool],
+        ethereum: Ethereum,
+        kovan: bool = False,
+        debug: bool = False,
     ) -> None:
         self.pools = pools
-        self.w3 = w3
+        self.ethereum = ethereum
         self.debug = debug
         self.kovan = kovan
         self.weth_address = (
@@ -40,12 +45,14 @@ class Algo:
             for token in pool.tokens:
                 self.pools_by_token[token.address.lower()].append(pool)
         self.notification = Notification(kovan=self.kovan)
+        self.printer = PrinterContract(
+            self.ethereum, self.notification, self.kovan, self.debug
+        )
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
         exchange_by_pool_address = {}
         for pool in self.pools:
-            eth_svc = Ethereum(w3=self.w3)
-            contract = eth_svc.init_contract(pool)
+            contract = self.ethereum.init_contract(pool)
             exchange = ExchangeFactory.create(contract, pool.type, debug=self.debug)
             exchange_by_pool_address[pool.address] = exchange
         return exchange_by_pool_address
@@ -62,6 +69,40 @@ class Algo:
         if step > MAX_STEP_SUPPORTED:
             raise Exception("We only supported MAX_STEP_SUPPORTED")
 
+    def _print_arbitrage(
+        self,
+        arbitrage_path: ArbitragePath,
+        token_out: Token,
+        optimal_amount_in: int,
+        min_amount_out: int,
+        optimal_arbitrage_amount: int,
+    ) -> None:
+        paths = f"{arbitrage_path.connecting_paths[0].token_in.name} ({arbitrage_path.connecting_paths[0].pool.type.name})"
+
+        for path in arbitrage_path.connecting_paths:
+            paths += f" -> {path.token_out.name} ({path.pool.type.name})"
+
+        result_str = f"Arbitrage [{paths}]: +{optimal_arbitrage_amount} ETH (Amount in: {token_out.from_wei(optimal_amount_in)} ETH - Min Amount out: {token_out.from_wei(min_amount_out)} ETH)"
+        print(
+            stylize(
+                result_str,
+                fg("green"),
+            )
+        )
+
+        contract_path_input = []
+        contract_type_input = []
+        for connecting_path in arbitrage_path.connecting_paths:
+            contract_path_input.append(connecting_path.pool.address)
+            contract_type_input.append(str(connecting_path.pool.type.value))
+        contract_input = f'Contract Input: {contract_path_input},{contract_type_input},"{optimal_amount_in}","{optimal_amount_in + token_out.to_wei(0.001)}"'.replace(
+            "'", '"'
+        )
+        result_str += f" - {contract_input}"
+        self.notification.send_slack(result_str)
+        if optimal_arbitrage_amount > 0.5:
+            self.notification.send_all_message(result_str)
+
     def _analyze_arbitrage(
         self,
         original_amount_in_wei: int,
@@ -77,38 +118,23 @@ class Algo:
             if arbitrage_amount > 0.03:
                 (
                     optimal_amount_in,
+                    min_amount_out,
                     optimal_arbitrage_amount,
                 ) = self._optimize_arbitrage_amount(
                     arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
                 )
-                paths = f"{arbitrage_path.connecting_paths[0].token_in.name} ({arbitrage_path.connecting_paths[0].pool.type.name})"
-                for path in arbitrage_path.connecting_paths:
-                    paths += f" -> {path.token_out.name} ({path.pool.type.name})"
-
-                result_str = f"Arbitrage [{paths}]: +{optimal_arbitrage_amount} ETH (Amount in: {token_out.from_wei(optimal_amount_in)} ETH)"
-                print(
-                    stylize(
-                        result_str,
-                        fg("green"),
-                    )
-                )
                 if optimal_arbitrage_amount > 0.20:
-                    contract_path_input = []
-                    contract_type_input = []
-                    for connecting_path in arbitrage_path.connecting_paths:
-                        contract_path_input.append(connecting_path.pool.address)
-                        contract_type_input.append(str(connecting_path.pool.type.value))
-                    contract_input = f'Contract Input: {contract_path_input},{contract_type_input},"{optimal_amount_in}","{optimal_amount_in + token_out.to_wei(0.001)}"'.replace(
-                        "'", '"'
+                    self._print_arbitrage(
+                        arbitrage_path,
+                        token_out,
+                        optimal_amount_in,
+                        min_amount_out,
+                        optimal_arbitrage_amount,
                     )
-                    result_str += f" - {contract_input}"
-                    self.notification.send_slack(result_str)
-                if optimal_arbitrage_amount > 0.5:
-                    self.notification.send_all_message(result_str)
-            else:
-                if self.debug:
-                    print(stylize(f"Arbitrage: {arbitrage_amount}", fg("red")))
-
+                    if input("Print Money? (y/n) ") == "y":
+                        self.printer.arbitrage(
+                            arbitrage_path, optimal_amount_in, min_amount_out
+                        )
         else:
             raise Exception("Token out is not WETH")
 
@@ -118,10 +144,11 @@ class Algo:
         amount_in_wei: int,
         arbitrage_amount: int,
         token_out: Token,
-    ) -> Tuple[int, int]:
+    ) -> Tuple[int, int, int]:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount = arbitrage_amount
         optimal_amount_in = amount_in_wei
+        exact_amount_out = amount_in_wei
         incremental_step = 1.0 if self.kovan else 0.10
         for amount in numpy.arange(1.1, MAX_WETH_AMOUNT_PER_TRADE, incremental_step):
             test_amount_in = token_out.to_wei(amount)
@@ -136,9 +163,15 @@ class Algo:
             if new_arbitrage_amount >= max_arbitrage_amount:
                 max_arbitrage_amount = new_arbitrage_amount
                 optimal_amount_in = test_amount_in
+                exact_amount_out = amount_out_wei
             else:
                 break
-        return optimal_amount_in, max_arbitrage_amount
+        diff = (exact_amount_out - optimal_amount_in) // 2
+
+        min_amount_out = max(
+            exact_amount_out - diff, optimal_amount_in + token_out.to_wei(0.05)
+        )
+        return optimal_amount_in, min_amount_out, max_arbitrage_amount
 
     def _find_connecting_paths(
         self, step: int, token_in: Token, previous_pool: Pool = None
