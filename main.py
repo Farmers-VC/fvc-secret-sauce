@@ -17,11 +17,12 @@ ETHEREUM_WS_URI_KOVAN = os.environ["ETHEREUM_WS_URI_KOVAN"]
 @click.command()
 @click.option("--kovan", is_flag=True)
 @click.option("--debug", is_flag=True)
-def main(kovan: bool, debug: bool) -> None:
+@click.option("--send-tx", is_flag=True)
+def main(kovan: bool, debug: bool, send_tx: bool) -> None:
     pools = load_all_pools(kovan)
     w3 = _init_web3(kovan)
     ethereum = Ethereum(w3, kovan)
-    algo = Algo(pools, ethereum, kovan=kovan, debug=debug)
+    algo = Algo(pools, ethereum, kovan=kovan, debug=debug, send_tx=send_tx)
     algo.scan_arbitrage()
 
 

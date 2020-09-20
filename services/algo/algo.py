@@ -28,11 +28,13 @@ class Algo:
         ethereum: Ethereum,
         kovan: bool = False,
         debug: bool = False,
+        send_tx: bool = False,
     ) -> None:
         self.pools = pools
         self.ethereum = ethereum
         self.debug = debug
         self.kovan = kovan
+        self.send_tx = send_tx
         self.weth_address = (
             "0xa0f764e120459bca39db7e57a0ce975a489ab4fa"
             if self.kovan
@@ -46,7 +48,7 @@ class Algo:
                 self.pools_by_token[token.address.lower()].append(pool)
         self.notification = Notification(kovan=self.kovan)
         self.printer = PrinterContract(
-            self.ethereum, self.notification, self.kovan, self.debug
+            self.ethereum, self.notification, self.kovan, self.debug, self.send_tx
         )
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
@@ -131,10 +133,11 @@ class Algo:
                         min_amount_out,
                         optimal_arbitrage_amount,
                     )
-                    if input("Print Money? (y/n) ") == "y":
-                        self.printer.arbitrage(
-                            arbitrage_path, optimal_amount_in, min_amount_out
-                        )
+                    if self.send_tx:
+                        if input("Print Money? (y/n) ") == "y":
+                            self.printer.arbitrage(
+                                arbitrage_path, optimal_amount_in, min_amount_out
+                            )
         else:
             raise Exception("Token out is not WETH")
 

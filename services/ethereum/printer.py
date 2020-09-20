@@ -16,7 +16,10 @@ class PrinterContract:
         notification: Notification,
         kovan: bool = False,
         debug: bool = False,
+        send_tx: bool = False,
     ) -> None:
+        if not send_tx:
+            return
         self.ethereum = ethereum
         self.contract = ethereum.init_printer_contract()
         self.weth_address = (
@@ -27,6 +30,7 @@ class PrinterContract:
         self.kovan = kovan
         self.debug = debug
         self.notification = notification
+        self.send_tx = send_tx
 
     def arbitrage(
         self,
@@ -34,6 +38,8 @@ class PrinterContract:
         amount_in_wei: int,
         min_amount_out_wei: int,
     ) -> None:
+        if not self.send_tx:
+            return
         paths = self._get_pool_paths(arbitrage_path)
         pool_types = self._get_pool_types(arbitrage_path)
         valid_tx = self._validate_transactions(
