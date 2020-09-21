@@ -35,9 +35,17 @@ class PoolLoader:
         return yaml_pools
 
     def _load_uniswap_pools(self) -> List[Pool]:
+        # https://thegraph.com/explorer/subgraph/uniswap/uniswap-v2?selected=playground
         query = """
         {
-            pairs(first: 1000, where: {reserveUSD_gt: 50000}, orderBy: volumeUSD, orderDirection: desc){
+            pairs(
+                first: 1000,
+                where: {
+                    reserveUSD_gt: 50000,
+                    volumeUSD_gt: 10000
+                },
+                orderBy: volumeUSD,
+                orderDirection: desc){
                 id
                 token0 {
                   id
@@ -81,16 +89,26 @@ class PoolLoader:
         return pools
 
     def _load_balancer_pools(self) -> List[Pool]:
+        # https://thegraph.com/explorer/subgraph/balancer-labs/balancer
         query = """
         {
-          pools(first: 1000, where: {publicSwap: true, tokensCount:2, liquidity_gt: 50000}, orderBy: totalSwapVolume, orderDirection: desc) {
-            id
-            tokens {
-              address
-              decimals
-              symbol
+            pools(
+                first: 1000,
+                where: {
+                    publicSwap: true,
+                    tokensCount:2,
+                    liquidity_gt: 50000,
+                    totalSwapVolume_gt:10000
+                },
+                orderBy: totalSwapVolume,
+                orderDirection: desc) {
+                id
+                tokens {
+                  address
+                  decimals
+                  symbol
+                }
             }
-          }
         }
 
         """
