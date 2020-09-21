@@ -31,7 +31,7 @@ class PoolLoader:
     def _load_kovan_pools(self) -> List[Pool]:
         token_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/tokens.yaml")
         pools_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/pools.yaml")
-        yaml_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
+        yaml_pools = self._load_pools_yaml(token_yaml_path, pools_yaml_path)
         return yaml_pools
 
     def _load_uniswap_pools(self) -> List[Pool]:
