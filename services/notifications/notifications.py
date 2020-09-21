@@ -8,7 +8,7 @@ TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 AGENT_PHONE_NUMBERS = os.environ.get("AGENT_PHONE_NUMBERS")
 TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER")
 SLACK_WEBHOOK_URI = os.environ.get("SLACK_WEBHOOK_URI")
-SLACK_WEBHOOK_URI_KOVAN = os.environ.get("SLACK_WEBHOOK_URI_KOVAN")
+KOVAN_SLACK_WEBHOOK_URI = os.environ.get("KOVAN_SLACK_WEBHOOK_URI")
 
 
 class Notification:
@@ -32,7 +32,7 @@ class Notification:
                 )
 
     def send_slack(self, message):
-        slack_webhook = SLACK_WEBHOOK_URI_KOVAN if self.kovan else SLACK_WEBHOOK_URI
+        slack_webhook = KOVAN_SLACK_WEBHOOK_URI if self.kovan else SLACK_WEBHOOK_URI
 
         requests.post(
             slack_webhook,

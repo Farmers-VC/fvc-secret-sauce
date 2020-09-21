@@ -14,6 +14,9 @@ THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 API_KEY = os.environ["ETHERSCAN_API_KEY"]
 ETHERSCAN_API = "https://api.etherscan.io/api"
 
+PRINTER_ADDRESS = os.environ["PRINTER_ADDRESS"]
+KOVAN_PRINTER_ADDRESS = os.environ["KOVAN_PRINTER_ADDRESS."]
+
 
 class Ethereum:
     def __init__(self, w3: Web3, kovan: bool = False) -> None:
@@ -50,9 +53,7 @@ class Ethereum:
 
     def init_printer_contract(self) -> Contract:
         json_file = "abi/kovan/proxy_arbitrage_abi.json" if self.kovan else ""
-        printer_address = (
-            "0x80B566461c3d16B2362Be8634d88FAF40d700aB1" if self.kovan else ""
-        )
+        printer_address = KOVAN_PRINTER_ADDRESS if self.kovan else PRINTER_ADDRESS
         with open(os.path.join(THIS_DIR, json_file)) as f:
             contract_abi = json.load(f)
         printer_contract = self.w3.eth.contract(

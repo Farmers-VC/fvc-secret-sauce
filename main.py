@@ -11,7 +11,7 @@ from services.pools.loader import PoolLoader
 
 ETHEREUM_WS_URI = os.environ["ETHEREUM_WS_URI"]
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-ETHEREUM_WS_URI_KOVAN = os.environ["ETHEREUM_WS_URI_KOVAN"]
+KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
 
 
 @click.command()
@@ -29,7 +29,7 @@ def main(kovan: bool, debug: bool, send_tx: bool) -> None:
 def _init_web3(kovan) -> Web3:
     w3 = Web3(Web3.WebsocketProvider(ETHEREUM_WS_URI))
     if kovan:
-        w3 = Web3(Web3.WebsocketProvider(ETHEREUM_WS_URI_KOVAN))
+        w3 = Web3(Web3.WebsocketProvider(KOVAN_ETHEREUM_WS_URI))
 
     gas_strategy = construct_time_based_gas_price_strategy(
         max_wait_seconds=10, sample_size=5, probability=100

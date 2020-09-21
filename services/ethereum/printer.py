@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from web3 import Web3
@@ -7,6 +8,8 @@ from services.notifications.notifications import Notification
 from services.ttypes.arbitrage import ArbitragePath
 
 ESTIMATE_GAS_EXECUTION = 500000
+WETH_ADDRESS = os.environ["WETH_ADDRESS"]
+KOVAN_WETH_ADDRESS = os.environ["KOVAN_WETH_ADDRESS"]
 
 
 class PrinterContract:
@@ -22,11 +25,7 @@ class PrinterContract:
             return
         self.ethereum = ethereum
         self.contract = ethereum.init_printer_contract()
-        self.weth_address = (
-            "0x2583407163b7f3f52f42d427f8634a7a652dc311"
-            if kovan
-            else "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-        ).lower()
+        self.weth_address = (KOVAN_WETH_ADDRESS if kovan else WETH_ADDRESS).lower()
         self.kovan = kovan
         self.debug = debug
         self.notification = notification

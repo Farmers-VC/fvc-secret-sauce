@@ -1,12 +1,13 @@
 # import threading
+import os
 import time
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
+import numpy
 from colored import fg, stylize
 from web3 import Web3
 
-import numpy
 from services.ethereum.ethereum import Ethereum
 from services.ethereum.printer import PrinterContract
 from services.exchange.factory import ExchangeFactory
@@ -19,6 +20,8 @@ from services.ttypes.arbitrage import ArbitragePath, ConnectingPath
 MAX_STEP_SUPPORTED = 3
 WETH_AMOUNT_IN = Web3.toWei("1.0", "ether")
 MAX_WETH_AMOUNT_PER_TRADE = 5.0
+WETH_ADDRESS = os.environ["WETH_ADDRESS"]
+KOVAN_WETH_ADDRESS = os.environ["KOVAN_WETH_ADDRESS"]
 
 
 class Algo:
@@ -35,11 +38,7 @@ class Algo:
         self.debug = debug
         self.kovan = kovan
         self.send_tx = send_tx
-        self.weth_address = (
-            "0x2583407163B7F3F52f42d427F8634a7A652DC311"
-            if self.kovan
-            else "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-        ).lower()
+        self.weth_address = (KOVAN_WETH_ADDRESS if self.kovan else WETH_ADDRESS).lower()
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
         self.pools_by_token: Dict[str, List[Pool]] = defaultdict(list)
