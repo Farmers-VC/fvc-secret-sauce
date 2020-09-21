@@ -1,3 +1,5 @@
+import os
+import os.path
 from typing import Dict, List
 
 import requests
@@ -6,10 +8,33 @@ import yaml
 from services.pools.pool import Pool
 from services.pools.token import Token
 
+THIS_DIR = os.path.abspath(os.path.dirname(__file__))
+
 
 class PoolLoader:
-    @staticmethod
-    def load_uniswap_pools() -> List[Pool]:
+    def __init__(self, kovan: bool = False):
+        self.kovan = kovan
+
+    def load_all_pools(self) -> List[Pool]:
+        if self.kovan:
+            return self._load_kovan_pools()
+
+        uniswap_pools = self._load_uniswap_pools()
+        balancer_pools = self._load_balancer_pools()
+
+        token_yaml_path = os.path.join(THIS_DIR, f"../../pools/tokens.yaml")
+        pools_yaml_path = os.path.join(THIS_DIR, f"../../pools/pools.yaml")
+        yaml_pools = self._load_pools_yaml(token_yaml_path, pools_yaml_path)
+
+        return uniswap_pools + balancer_pools + yaml_pools
+
+    def _load_kovan_pools(self) -> List[Pool]:
+        token_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/tokens.yaml")
+        pools_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/pools.yaml")
+        yaml_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
+        return yaml_pools
+
+    def _load_uniswap_pools(self) -> List[Pool]:
         query = """
         {
             pairs(first: 1000, where: {reserveUSD_gt: 50000}, orderBy: volumeUSD, orderDirection: desc){
@@ -55,8 +80,7 @@ class PoolLoader:
             )
         return pools
 
-    @staticmethod
-    def load_balancer_pools() -> List[Pool]:
+    def _load_balancer_pools(self) -> List[Pool]:
         query = """
         {
           pools(first: 1000, where: {publicSwap: true, tokensCount:2, liquidity_gt: 50000}, orderBy: totalSwapVolume, orderDirection: desc) {
@@ -96,8 +120,7 @@ class PoolLoader:
             )
         return pools
 
-    @staticmethod
-    def load_pools_yaml(token_path: str, pool_path: str) -> List[Pool]:
+    def _load_pools_yaml(self, token_path: str, pool_path: str) -> List[Pool]:
         tokens = _load_tokens_yaml(token_path)
         pools = _load_pools_yaml(pool_path, tokens)
         return pools

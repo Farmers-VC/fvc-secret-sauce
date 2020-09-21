@@ -10,19 +10,27 @@ from services.ethereum.ethereum import Ethereum
 from services.pools.loader import PoolLoader
 
 ETHEREUM_WS_URI = os.environ["ETHEREUM_WS_URI"]
-THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
 
 
 @click.command()
-@click.option("--kovan", is_flag=True)
-@click.option("--debug", is_flag=True)
-@click.option("--send-tx", is_flag=True)
-def main(kovan: bool, debug: bool, send_tx: bool) -> None:
-    pools = load_all_pools(kovan)
+@click.option("--kovan", is_flag=True, help="Point to Kovan test network")
+@click.option("--debug", is_flag=True, help="Display logs")
+@click.option("--send-tx", is_flag=True, help="Send arbitrage transactions on-chain")
+@click.option("--amount", default=6.0, help="Set max amount to trade with in WETH")
+def main(kovan: bool, debug: bool, send_tx: bool, amount: float) -> None:
+    pool_loader = PoolLoader(kovan=kovan)
+    pools = pool_loader.load_all_pools()
     w3 = _init_web3(kovan)
     ethereum = Ethereum(w3, kovan)
-    algo = Algo(pools, ethereum, kovan=kovan, debug=debug, send_tx=send_tx)
+    algo = Algo(
+        pools,
+        ethereum,
+        kovan=kovan,
+        debug=debug,
+        send_tx=send_tx,
+        max_amount_in_weth=amount,
+    )
     algo.scan_arbitrage()
 
 
@@ -36,25 +44,6 @@ def _init_web3(kovan) -> Web3:
     )
     w3.eth.setGasPriceStrategy(gas_strategy)
     return w3
-
-
-def load_all_pools(kovan):
-    if kovan:
-        return _load_kovan_pools()
-
-    uniswap_pools = PoolLoader.load_uniswap_pools()
-    balancer_pools = PoolLoader.load_balancer_pools()
-    token_yaml_path = os.path.join(THIS_DIR, f"pools/tokens.yaml")
-    pools_yaml_path = os.path.join(THIS_DIR, f"pools/pools.yaml")
-    yaml_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
-    return uniswap_pools + balancer_pools + yaml_pools
-
-
-def _load_kovan_pools():
-    token_yaml_path = os.path.join(THIS_DIR, f"pools/kovan/tokens.yaml")
-    pools_yaml_path = os.path.join(THIS_DIR, f"pools/kovan/pools.yaml")
-    yaml_pools = PoolLoader.load_pools_yaml(token_yaml_path, pools_yaml_path)
-    return yaml_pools
 
 
 main()
