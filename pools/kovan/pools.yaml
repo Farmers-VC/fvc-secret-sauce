@@ -1,16 +1,16 @@
 pools:
-  - name: 'WETH/FAB'
-    type: BPOOL
-    address: '0x300b65Cda47ae981cB1FC161b107a37F27176625'
-    tokens: ['WETH', 'FAB']
-  - name: 'FAB/HUY'
-    type: BPOOL
-    address: '0xeEB60Eb38188B60e3596C43B4cF5d7e5bE565296'
-    tokens: ['FAB', 'HUY']
-  - name: 'WETH/HUY'
-    type: BPOOL
-    address: '0x01AD95499b8f5a1a8265912B852534c736206bC9'
-    tokens: ['WETH', 'HUY']
+  # - name: 'WETH/FAB'
+  #   type: BPOOL
+  #   address: '0x300b65Cda47ae981cB1FC161b107a37F27176625'
+  #   tokens: ['WETH', 'FAB']
+  # - name: 'FAB/HUY'
+  #   type: BPOOL
+  #   address: '0xeEB60Eb38188B60e3596C43B4cF5d7e5bE565296'
+  #   tokens: ['FAB', 'HUY']
+  # - name: 'WETH/HUY'
+  #   type: BPOOL
+  #   address: '0x01AD95499b8f5a1a8265912B852534c736206bC9'
+  #   tokens: ['WETH', 'HUY']
 
 
   - name: 'WETH/FAB'
@@ -25,3 +25,18 @@ pools:
     type: UNISWAP
     address: '0x71756926c61171025dfd1b49b055f36d4e297c11'
     tokens: ['WETH', 'HUY']
+
+  # - name: 'DEGO/HUY'
+  #   type: UNISWAP
+  #   address: '0x7c45be4198c830c2bb57c2d39cfc7197408f91f3'
+  #   tokens: ['DEGO', 'HUY']
+
+  # - name: 'DEGO/WETH'
+  #   type: UNISWAP
+  #   address: '0x5d9fd781c073b12c4e76d76235cc02f06da7e558'
+  #   tokens: ['DEGO', 'WETH']
+
+  # - name: 'DEGO/FAB'
+  #   type: UNISWAP
+  #   address: '0x187b7275aa082c915430d554994aa4d6f8562ce2'
+  #   tokens: ['DEGO', 'FAB']

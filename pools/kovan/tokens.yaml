@@ -8,3 +8,6 @@ tokens:
   - name: HUY
     address: '0x123C57DA279ECD46cca0DBCF1a145301F753255A'
     decimal: 18
+  - name: DEGO
+    address: '0xc8973b025AaC70f4b95CB91E152EC7486Ea31543'
+    decimal: 18
