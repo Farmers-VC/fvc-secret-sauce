@@ -68,23 +68,23 @@ class PoolLoader:
         # https://thegraph.com/explorer/subgraph/balancer-labs/balancer
         query = """
         {
-          pools(
-            first: 1000, 
-            where: {
-                publicSwap: true, 
-                tokensCount:2, 
-                liquidity_gt: 50000, 
-                totalSwapVolume_gt:10000
-            }, 
-            orderBy: totalSwapVolume, 
-            orderDirection: desc) {
+            pools(
+                first: 1000, 
+                where: {
+                    publicSwap: true, 
+                    tokensCount:2, 
+                    liquidity_gt: 50000, 
+                    totalSwapVolume_gt:10000
+                }, 
+                orderBy: totalSwapVolume, 
+                orderDirection: desc) {
                 id
                 tokens {
                   address
                   decimals
                   symbol
                 }
-          }
+            }
         }
 
         """
