@@ -15,7 +15,7 @@ API_KEY = os.environ["ETHERSCAN_API_KEY"]
 ETHERSCAN_API = "https://api.etherscan.io/api"
 
 PRINTER_ADDRESS = os.environ["PRINTER_ADDRESS"]
-KOVAN_PRINTER_ADDRESS = os.environ["KOVAN_PRINTER_ADDRESS."]
+KOVAN_PRINTER_ADDRESS = os.environ["KOVAN_PRINTER_ADDRESS"]
 
 
 class Ethereum:
