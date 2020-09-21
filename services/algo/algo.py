@@ -96,7 +96,7 @@ class Algo:
         for connecting_path in arbitrage_path.connecting_paths:
             contract_path_input.append(connecting_path.pool.address)
             contract_type_input.append(str(connecting_path.pool.type.value))
-        contract_input = f'Contract Input: {contract_path_input},{contract_type_input},"{optimal_amount_in}","{optimal_amount_in + token_out.to_wei(0.001)}"'.replace(
+        contract_input = f'Contract Input: {contract_path_input},{contract_type_input},"{optimal_amount_in}","1"'.replace(
             "'", '"'
         )
         result_str += f" - {contract_input}"
