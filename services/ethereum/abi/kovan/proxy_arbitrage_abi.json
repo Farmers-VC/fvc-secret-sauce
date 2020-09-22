@@ -6,6 +6,21 @@
 		"type": "constructor"
 	},
 	{
+		"constant": true,
+		"inputs": [],
+		"name": "WETH_ADDRESS",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"constant": false,
 		"inputs": [
 			{
@@ -14,7 +29,7 @@
 				"type": "address[]"
 			},
 			{
-				"internalType": "enum ProxyArbitrage.PoolType[]",
+				"internalType": "enum Printer.PoolType[]",
 				"name": "poolType",
 				"type": "uint8[]"
 			},
@@ -25,7 +40,7 @@
 			},
 			{
 				"internalType": "uint256",
-				"name": "minAmountOut",
+				"name": "estimateGasCost",
 				"type": "uint256"
 			}
 		],

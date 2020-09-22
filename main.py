@@ -17,7 +17,9 @@ KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
 @click.option("--kovan", is_flag=True, help="Point to Kovan test network")
 @click.option("--debug", is_flag=True, help="Display logs")
 @click.option("--send-tx", is_flag=True, help="Send arbitrage transactions on-chain")
-@click.option("--amount", default=6.0, help="Set max amount to trade with in WETH")
+@click.option(
+    "--amount", default=6.0, help="Set max amount to trade with in WETH (Default: 6.0)"
+)
 def main(kovan: bool, debug: bool, send_tx: bool, amount: float) -> None:
     pool_loader = PoolLoader(kovan=kovan)
     pools = pool_loader.load_all_pools()

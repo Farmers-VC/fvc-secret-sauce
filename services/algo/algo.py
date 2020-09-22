@@ -5,7 +5,6 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy
-from colored import fg, stylize
 from web3 import Web3
 
 from services.ethereum.ethereum import Ethereum
@@ -72,41 +71,6 @@ class Algo:
         if step > MAX_STEP_SUPPORTED:
             raise Exception("We only supported MAX_STEP_SUPPORTED")
 
-    def _print_arbitrage(
-        self,
-        arbitrage_path: ArbitragePath,
-        token_out: Token,
-        optimal_amount_in: int,
-        max_arbitrage_amount: int,
-    ) -> None:
-        paths = f"{arbitrage_path.connecting_paths[0].token_in.name} ({arbitrage_path.connecting_paths[0].pool.type.name})"
-
-        for path in arbitrage_path.connecting_paths:
-            paths += f" -> {path.token_out.name} ({path.pool.type.name})"
-
-        arbitrage_result = f"Arbitrage: {paths} \nAmount: +{max_arbitrage_amount} ETH \nAmount in: {token_out.from_wei(optimal_amount_in)} ETH"
-        print(
-            stylize(
-                arbitrage_result,
-                fg("green"),
-            )
-        )
-
-        contract_path_input = []
-        contract_type_input = []
-        for connecting_path in arbitrage_path.connecting_paths:
-            contract_path_input.append(connecting_path.pool.address)
-            contract_type_input.append(str(connecting_path.pool.type.value))
-        contract_input = f'Contract Input: {contract_path_input},{contract_type_input},"{optimal_amount_in}","1"'.replace(
-            "'", '"'
-        )
-        slack_message = arbitrage_result + (
-            f" - \n{contract_input}\n------------------------------------------"
-        )
-        self.notification.send_slack(slack_message)
-        if max_arbitrage_amount > 0.5:
-            self.notification.send_twilio(arbitrage_result)
-
     def _analyze_arbitrage(
         self,
         original_amount_in_wei: int,
@@ -127,19 +91,11 @@ class Algo:
                     arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
                 )
                 if max_arbitrage_amount > 0.20:
-                    self._print_arbitrage(
+                    self.printer.arbitrage(
                         arbitrage_path,
-                        token_out,
                         optimal_amount_in,
                         max_arbitrage_amount,
                     )
-                    if self.send_tx:
-                        if input("Print Money? (y/n) ") == "y":
-                            self.printer.arbitrage(
-                                arbitrage_path,
-                                optimal_amount_in,
-                                max_arbitrage_amount,
-                            )
         else:
             raise Exception("Token out is not WETH")
 
