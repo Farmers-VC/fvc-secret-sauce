@@ -25,8 +25,28 @@ class PoolLoader:
         token_yaml_path = os.path.join(THIS_DIR, f"../../pools/tokens.yaml")
         pools_yaml_path = os.path.join(THIS_DIR, f"../../pools/pools.yaml")
         yaml_pools = self._load_pools_yaml(token_yaml_path, pools_yaml_path)
+        pools_without_blacklist = self._filter_blacklist_pools(
+            uniswap_pools + balancer_pools + yaml_pools
+        )
 
-        return uniswap_pools + balancer_pools + yaml_pools
+        return pools_without_blacklist
+
+    def _filter_blacklist_pools(self, pools: List[Pool]) -> List[Pool]:
+        blacklist_yaml_path = os.path.join(THIS_DIR, f"../../pools/blacklist.yaml")
+        blacklist_tokens = _load_tokens_yaml(blacklist_yaml_path)
+        blacklist_addresses = [token.address.lower() for token in blacklist_tokens]
+
+        filtered_pools: List[Pool] = []
+        for pool in pools:
+            blacklist_token_found = False
+            for blacklist_addr in blacklist_addresses:
+                if pool.contain_token(blacklist_addr):
+                    blacklist_token_found = True
+                    break
+            if not blacklist_token_found:
+                filtered_pools.append(pool)
+
+        return filtered_pools
 
     def _load_kovan_pools(self) -> List[Pool]:
         token_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/tokens.yaml")
