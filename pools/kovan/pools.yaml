@@ -1,16 +1,16 @@
 pools:
-  # - name: 'WETH/FAB'
-  #   type: BPOOL
-  #   address: '0x300b65Cda47ae981cB1FC161b107a37F27176625'
-  #   tokens: ['WETH', 'FAB']
-  # - name: 'FAB/HUY'
-  #   type: BPOOL
-  #   address: '0xeEB60Eb38188B60e3596C43B4cF5d7e5bE565296'
-  #   tokens: ['FAB', 'HUY']
-  # - name: 'WETH/HUY'
-  #   type: BPOOL
-  #   address: '0x01AD95499b8f5a1a8265912B852534c736206bC9'
-  #   tokens: ['WETH', 'HUY']
+  - name: 'WETH/FAB'
+    type: BPOOL
+    address: '0x300b65Cda47ae981cB1FC161b107a37F27176625'
+    tokens: ['WETH', 'FAB']
+  - name: 'FAB/HUY'
+    type: BPOOL
+    address: '0xeEB60Eb38188B60e3596C43B4cF5d7e5bE565296'
+    tokens: ['FAB', 'HUY']
+  - name: 'WETH/HUY'
+    type: BPOOL
+    address: '0x01AD95499b8f5a1a8265912B852534c736206bC9'
+    tokens: ['WETH', 'HUY']
 
 
   - name: 'WETH/FAB'
