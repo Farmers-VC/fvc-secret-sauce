@@ -12,11 +12,11 @@ Options:
 
 # Installation
 
-virtualenv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python main.py
+1. virtualenv venv
+2. source venv/bin/activate
+3. pip install -r requirements.txt
 
 # Environment
-cp .envrc.default .envrc
-direnv allow
+Requirement: install direnv: https://direnv.net/docs/installation.html
+1. cp .envrc.default .envrc
+2. direnv allow

@@ -119,14 +119,14 @@ class Algo:
             arbitrage_amount = token_out.from_wei(
                 amount_out_wei - original_amount_in_wei
             )
-            if arbitrage_amount > 0.1:
+            if arbitrage_amount > 0.03:
                 (
                     optimal_amount_in,
                     max_arbitrage_amount,
                 ) = self._optimize_arbitrage_amount(
                     arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
                 )
-                if max_arbitrage_amount > 0.30:
+                if max_arbitrage_amount > 0.20:
                     self._print_arbitrage(
                         arbitrage_path,
                         token_out,
