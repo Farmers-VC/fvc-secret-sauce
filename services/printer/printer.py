@@ -196,5 +196,5 @@ class PrinterContract:
             f"\n{contract_input}\n------------------------------------------"
         )
         self.notification.send_slack(slack_message)
-        if max_arbitrage_amount > 0.5:
+        if max_arbitrage_amount > 1:
             self.notification.send_twilio(arbitrage_result)

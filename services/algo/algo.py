@@ -90,7 +90,7 @@ class Algo:
                 ) = self._optimize_arbitrage_amount(
                     arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
                 )
-                if max_arbitrage_amount > 0.20:
+                if max_arbitrage_amount > 0.25:
                     self.printer.arbitrage(
                         arbitrage_path,
                         optimal_amount_in,
