@@ -38,7 +38,7 @@ class PrinterContract:
         pool_types = self._get_pool_types(arbitrage_path)
         gas_price = self._calculate_gas_price()
         gas_price_execution = gas_price * self.config.get_int("ESTIMATE_GAS_EXECUTION")
-        current_block_height = self.ethereum.w3.eth.getBlock("latest").number
+        current_block_height = self.ethereum.w3.eth.blockNumber
         valid_tx = self._validate_transactions(
             token_out,
             paths,
