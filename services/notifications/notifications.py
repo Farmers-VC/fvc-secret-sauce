@@ -25,9 +25,9 @@ class Notification:
                     body=message,
                 )
 
-    def send_slack_printing_tx(self, tx_hash: str) -> None:
+    def send_slack_printing_tx(self, tx_hash_url: str) -> None:
         slack_webhook = self.config.get("SLACK_PRINTING_TX_WEBHOOK")
-        message = f":money_with_wings::money_with_wings::money_with_wings:\nTransaction executed https://etherscan.com/tx/{tx_hash}"
+        message = f":money_with_wings::money_with_wings::money_with_wings:\nTransaction executed {tx_hash_url}"
         print(stylize(message, fg("green")))
         requests.post(
             slack_webhook,
@@ -43,8 +43,8 @@ class Notification:
         )
 
     def send_slack_errors(self, message):
-        slack_webhook = self.config.get("SLACK_PRINTING_TX_WEBHOOK")
-        message = ":red_circle::red_circle::red_circle:\n" + message
+        slack_webhook = self.config.get("SLACK_ERRORS_WEBHOOK")
+        message = ":red_circle:\n" + message
         print(stylize(message, fg("red")))
         requests.post(
             slack_webhook,

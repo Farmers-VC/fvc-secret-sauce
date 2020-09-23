@@ -66,43 +66,71 @@ class PrinterContract:
         """Trigger the arbitrage transaction on-chain"""
         if self.config.send_tx and input("Print Money? (y/n) ") == "y":
             try:
-                estimate_gas = self.contract.functions.arbitrage(
+                # Run estimateGas to see if the transaction would go through
+                self.contract.functions.arbitrage(
                     paths, pool_types, amount_in_wei, gas_price_execution
-                ).estimateGas()
-                breakpoint()
-                unsigned_tx = self.contract.functions.arbitrage(
-                    paths, pool_types, amount_in_wei, gas_price_execution
-                ).buildTransaction(
-                    {
-                        "chainId": 42 if self.kovan else 1,
-                        "gas": self.config.get_int("ESTIMATE_GAS_EXECUTION"),
-                        "gasPrice": gas_price,
-                        "nonce": self.ethereum.w3.eth.getTransactionCount(
-                            self.executor_address
-                        ),
-                    }
-                )
-                signed_tx = self.ethereum.w3.eth.account.sign_transaction(
-                    unsigned_tx, self.socks
-                )
-                tx_hash = self.ethereum.w3.eth.sendRawTransaction(
-                    signed_tx.rawTransaction
-                )
+                ).estimateGas({"from": self.executor_address})
+            except Exception as e:
+                self.notification.send_slack_errors(f"Gas Estimation Failed: {str(e)}")
+                return
 
-                print(
-                    stylize(
-                        f"Sending transaction {tx_hash.hex()} ...",
-                        fg("yellow"),
-                    )
+            try:
+                tx_hash = self._building_tx_and_signing_and_send(
+                    paths, pool_types, amount_in_wei, gas_price_execution, gas_price
                 )
-                self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash.hex())
-                self.notification.send_slack_printing_tx(tx_hash.hex())
+                receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
+                etherscan_url = (
+                    "https://kovan.etherscan.com/"
+                    if self.config.kovan
+                    else "https://etherscan.com"
+                )
+                tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
+                if receipt["status"] == 1:
+                    self.notification.send_slack_printing_tx(tx_hash_url)
+                    self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
+                else:
+                    self.notification.send_slack_errors(
+                        f"Transaction went through but failed {tx_hash_url}"
+                    )
             except TimeExhausted as e:
-                self.notifications.send_slack_errors(
-                    f"Transaction failed {tx_hash.hex()}: {str(e)}"
+                self.notification.send_slack_errors(
+                    f"Transaction failed {tx_hash_url}: {str(e)}"
                 )
             except Exception as e:
                 self.notification.send_slack_errors(f"Exception: {str(e)}")
+
+    def _building_tx_and_signing_and_send(
+        self,
+        paths: List[str],
+        pool_types: List[int],
+        amount_in_wei: int,
+        gas_price_execution: int,
+        gas_price: int,
+    ) -> str:
+        """Helper function to build the transaction and signed it with priv key"""
+        unsigned_tx = self.contract.functions.arbitrage(
+            paths, pool_types, amount_in_wei, gas_price_execution
+        ).buildTransaction(
+            {
+                "chainId": 42 if self.config.kovan else 1,
+                "gas": self.config.get_int("ESTIMATE_GAS_EXECUTION"),
+                "gasPrice": gas_price,
+                "nonce": self.ethereum.w3.eth.getTransactionCount(
+                    self.executor_address
+                ),
+            }
+        )
+        signed_tx = self.ethereum.w3.eth.account.sign_transaction(
+            unsigned_tx, self.socks
+        )
+        tx_hash = self.ethereum.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+        print(
+            stylize(
+                f"Sending transaction {tx_hash.hex()} ...",
+                fg("yellow"),
+            )
+        )
+        return tx_hash.hex()
 
     def _get_pool_paths(self, arbitrage_path: ArbitragePath) -> List[str]:
         return [
@@ -162,7 +190,7 @@ class PrinterContract:
             times = 6
         if max_arbitrage_amount >= 2.0:
             times = 8
-        return [emoji for _ in range(times)].split("")
+        return "".join([emoji for _ in range(times)])
 
     def _display_arbitrage(
         self,
@@ -176,7 +204,7 @@ class PrinterContract:
         paths = f"{arbitrage_path.connecting_paths[0].token_in.name} ({arbitrage_path.connecting_paths[0].pool.type.name})"
         for path in arbitrage_path.connecting_paths:
             paths += f" -> {path.token_out.name} ({path.pool.type.name})"
-        beers = self._display_beers_by_amount(max_arbitrage_amount, ":beer:")
+        beers = self._display_emoji_by_amount(max_arbitrage_amount, ":beer:")
         arbitrage_result = f"{beers}\nOpportunity: *{max_arbitrage_amount}* ETH :moneybag:\nPath: {paths} \nAmount in: {token_out.from_wei(optimal_amount_in)} ETH\nGas Price: {self.ethereum.w3.fromWei(gas_price, 'gwei')} Gwei"
         contract_path_input = []
         contract_type_input = []
