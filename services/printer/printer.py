@@ -80,9 +80,9 @@ class PrinterContract:
                 )
                 receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
                 etherscan_url = (
-                    "https://kovan.etherscan.com/"
+                    "https://kovan.etherscan.io/"
                     if self.config.kovan
-                    else "https://etherscan.com"
+                    else "https://etherscan.io"
                 )
                 tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
                 if receipt["status"] == 1:
@@ -114,7 +114,7 @@ class PrinterContract:
             {
                 "chainId": 42 if self.config.kovan else 1,
                 "gas": self.config.get_int("ESTIMATE_GAS_EXECUTION"),
-                "gasPrice": gas_price,
+                "gasPrice": int(gas_price * 1.5),
                 "nonce": self.ethereum.w3.eth.getTransactionCount(
                     self.executor_address
                 ),
