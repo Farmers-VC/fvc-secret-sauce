@@ -38,6 +38,7 @@ class PrinterContract:
         pool_types = self._get_pool_types(arbitrage_path)
         gas_price = self._calculate_gas_price()
         gas_price_execution = gas_price * self.config.get_int("ESTIMATE_GAS_EXECUTION")
+        current_block_height = self.ethereum.w3.eth.getBlock("latest").number
         valid_tx = self._validate_transactions(
             token_out,
             paths,
@@ -54,6 +55,7 @@ class PrinterContract:
                 max_arbitrage_amount,
                 gas_price,
                 gas_price_execution,
+                current_block_height + (5 if self.config.kovan else 1),
             )
             self._send_transaction_on_chain(
                 paths, pool_types, amount_in_wei, gas_price_execution, gas_price
@@ -202,7 +204,7 @@ class PrinterContract:
         max_arbitrage_amount: int,
         gas_price: int,
         gas_price_execution: int,
-        max_block_height: int = 991110884,  # TODO: Need the max block height before tx fails: require(block.number < max_block_height)
+        max_block_height: int,
     ) -> None:
         paths = f"{arbitrage_path.connecting_paths[0].token_in.name} ({arbitrage_path.connecting_paths[0].pool.type.name})"
         for path in arbitrage_path.connecting_paths:
