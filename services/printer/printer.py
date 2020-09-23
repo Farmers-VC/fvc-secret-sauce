@@ -64,7 +64,7 @@ class PrinterContract:
         gas_price: int,
     ) -> None:
         """Trigger the arbitrage transaction on-chain"""
-        if self.config.send_tx and input("Print Money? (y/n) ") == "y":
+        if self.config.send_tx:
             try:
                 # Run estimateGas to see if the transaction would go through
                 self.contract.functions.arbitrage(
@@ -86,12 +86,10 @@ class PrinterContract:
                 )
                 tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
                 if receipt["status"] == 1:
-                    self.notification.send_slack_printing_tx(tx_hash_url)
+                    self.notification.send_slack_printing_tx(tx_hash_url, success=True)
                     self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
                 else:
-                    self.notification.send_slack_errors(
-                        f"Transaction went through but failed {tx_hash_url}"
-                    )
+                    self.notification.send_slack_printing_tx(tx_hash_url, success=False)
             except TimeExhausted as e:
                 self.notification.send_slack_errors(
                     f"Transaction failed {tx_hash_url}: {str(e)}"

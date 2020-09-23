@@ -25,10 +25,14 @@ class Notification:
                     body=message,
                 )
 
-    def send_slack_printing_tx(self, tx_hash_url: str) -> None:
+    def send_slack_printing_tx(self, tx_hash_url: str, success: bool = False) -> None:
         slack_webhook = self.config.get("SLACK_PRINTING_TX_WEBHOOK")
-        message = f":money_with_wings::money_with_wings::money_with_wings:\nTransaction executed {tx_hash_url}"
-        print(stylize(message, fg("green")))
+        if success:
+            message = f":money_with_wings::money_with_wings::money_with_wings:\nTransaction executed {tx_hash_url}"
+            print(stylize(message, fg("green")))
+        else:
+            message = f":red_circle::red_circle::red_circle:\nTransaction was processed but failed {tx_hash_url}"
+            print(stylize(message, fg("red")))
         requests.post(
             slack_webhook,
             json={"text": message},
