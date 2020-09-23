@@ -1,30 +1,25 @@
-import os
-import os.path
 from typing import Dict, List
 
 import requests
 import yaml
 
+from config import Config
 from services.pools.pool import Pool
 from services.pools.token import Token
 
-THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-
 
 class PoolLoader:
-    def __init__(self, kovan: bool = False):
-        self.kovan = kovan
+    def __init__(self, config: Config):
+        self.config = config
 
     def load_all_pools(self) -> List[Pool]:
-        if self.kovan:
-            return self._load_kovan_pools()
+        if self.config.kovan:
+            return self._load_pools_yaml()
 
         uniswap_pools = self._load_uniswap_pools()
         balancer_pools = self._load_balancer_pools()
 
-        token_yaml_path = os.path.join(THIS_DIR, f"../../pools/tokens.yaml")
-        pools_yaml_path = os.path.join(THIS_DIR, f"../../pools/pools.yaml")
-        yaml_pools = self._load_pools_yaml(token_yaml_path, pools_yaml_path)
+        yaml_pools = self._load_pools_yaml()
         pools_without_blacklist = self._filter_blacklist_pools(
             uniswap_pools + balancer_pools + yaml_pools
         )
@@ -32,8 +27,9 @@ class PoolLoader:
         return pools_without_blacklist
 
     def _filter_blacklist_pools(self, pools: List[Pool]) -> List[Pool]:
-        blacklist_yaml_path = os.path.join(THIS_DIR, f"../../pools/blacklist.yaml")
-        blacklist_tokens = _load_tokens_yaml(blacklist_yaml_path)
+        blacklist_tokens = _load_tokens_yaml(
+            self.config.get("TOKEN_BLACKLIST_YAML_PATH")
+        )
         blacklist_addresses = [token.address.lower() for token in blacklist_tokens]
 
         filtered_pools: List[Pool] = []
@@ -47,12 +43,6 @@ class PoolLoader:
                 filtered_pools.append(pool)
 
         return filtered_pools
-
-    def _load_kovan_pools(self) -> List[Pool]:
-        token_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/tokens.yaml")
-        pools_yaml_path = os.path.join(THIS_DIR, f"../../pools/kovan/pools.yaml")
-        yaml_pools = self._load_pools_yaml(token_yaml_path, pools_yaml_path)
-        return yaml_pools
 
     def _load_uniswap_pools(self) -> List[Pool]:
         # https://thegraph.com/explorer/subgraph/uniswap/uniswap-v2?selected=playground
@@ -156,9 +146,9 @@ class PoolLoader:
             )
         return pools
 
-    def _load_pools_yaml(self, token_path: str, pool_path: str) -> List[Pool]:
-        tokens = _load_tokens_yaml(token_path)
-        pools = _load_pools_yaml(pool_path, tokens)
+    def _load_pools_yaml(self) -> List[Pool]:
+        tokens = _load_tokens_yaml(self.config.get("TOKEN_YAML_PATH"))
+        pools = _load_pools_yaml(self.config.get("POOL_YAML_PATH"), tokens)
         return pools
 
 

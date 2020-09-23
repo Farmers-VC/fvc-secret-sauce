@@ -1,12 +1,12 @@
 # import threading
-import os
 import time
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy
-from web3 import Web3
+from colored import fg, stylize
 
+from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.exchange.factory import ExchangeFactory
 from services.exchange.iexchange import ExchangeInterface
@@ -16,29 +16,19 @@ from services.pools.token import Token
 from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath, ConnectingPath
 
-MAX_STEP_SUPPORTED = 3
-WETH_AMOUNT_IN = Web3.toWei("1.0", "ether")
-MAX_WETH_AMOUNT_PER_TRADE = 6.4
-WETH_ADDRESS = os.environ["WETH_ADDRESS"]
-KOVAN_WETH_ADDRESS = os.environ["KOVAN_WETH_ADDRESS"]
-
 
 class Algo:
     def __init__(
         self,
         pools: List[Pool],
         ethereum: Ethereum,
-        kovan: bool = False,
-        debug: bool = False,
-        send_tx: bool = False,
+        config: Config,
         max_amount_in_weth: float = 3.0,
     ) -> None:
         self.pools = pools
         self.ethereum = ethereum
-        self.debug = debug
-        self.kovan = kovan
-        self.send_tx = send_tx
-        self.weth_address = (KOVAN_WETH_ADDRESS if self.kovan else WETH_ADDRESS).lower()
+        self.config = config
+        self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.max_amount_in_weth = max_amount_in_weth
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
@@ -46,16 +36,16 @@ class Algo:
         for pool in self.pools:
             for token in pool.tokens:
                 self.pools_by_token[token.address.lower()].append(pool)
-        self.notification = Notification(kovan=self.kovan)
-        self.printer = PrinterContract(
-            self.ethereum, self.notification, self.kovan, self.debug, self.send_tx
-        )
+        self.notification = Notification(self.config)
+        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
         exchange_by_pool_address = {}
         for pool in self.pools:
             contract = self.ethereum.init_contract(pool)
-            exchange = ExchangeFactory.create(contract, pool.type, debug=self.debug)
+            exchange = ExchangeFactory.create(
+                contract, pool.type, debug=self.config.debug
+            )
             exchange_by_pool_address[pool.address] = exchange
         return exchange_by_pool_address
 
@@ -66,10 +56,15 @@ class Algo:
             raise Exception("Step 2 should never be WETH as a token_in")
         if step == 3 and token_in.address == self.weth_address:
             raise Exception("Step 3 should never be WETH as a token_in")
-        if step == MAX_STEP_SUPPORTED and token_out.address != self.weth_address:
+        if (
+            step == self.config.get_int("MAX_STEP_SUPPORTED")
+            and token_out.address != self.weth_address
+        ):
             raise Exception("Last step should always result in WETH")
-        if step > MAX_STEP_SUPPORTED:
-            raise Exception("We only supported MAX_STEP_SUPPORTED")
+        if step > self.config.get_int("MAX_STEP_SUPPORTED"):
+            raise Exception(
+                f"We only supporte {self.config.get_int('MAX_STEP_SUPPORTED')} steps"
+            )
 
     def _analyze_arbitrage(
         self,
@@ -90,7 +85,7 @@ class Algo:
                 ) = self._optimize_arbitrage_amount(
                     arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
                 )
-                if max_arbitrage_amount > 0.25:
+                if max_arbitrage_amount > 0.20:
                     self.printer.arbitrage(
                         arbitrage_path,
                         optimal_amount_in,
@@ -109,14 +104,15 @@ class Algo:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount = arbitrage_amount
         optimal_amount_in = amount_in_wei
-        incremental_step = 1.0 if self.kovan else 0.10
-        for amount in numpy.arange(1.1, self.max_amount_in_weth, incremental_step):
+        for amount in numpy.arange(
+            1.1, self.max_amount_in_weth, self.config.get_float("INCREMENTAL_STEP")
+        ):
             test_amount_in = token_out.to_wei(amount)
             _, amount_out_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, test_amount_in
             )
             new_arbitrage_amount = token_out.from_wei(amount_out_wei - test_amount_in)
-            if self.debug:
+            if self.config.debug:
                 print(
                     f"[OPTIMIZATING][Amount in {token_out.from_wei(test_amount_in)} ETH] Arbitrage: {new_arbitrage_amount} ETH"
                 )
@@ -131,7 +127,9 @@ class Algo:
         self, step: int, token_in: Token, previous_pool: Pool = None
     ) -> List[List[ConnectingPath]]:
         """Given a Token in, find all connecting paths from the list of all Pools avaivable"""
-        if token_in.address == self.weth_address or step > MAX_STEP_SUPPORTED:
+        if token_in.address == self.weth_address or step > self.config.get_int(
+            "MAX_STEP_SUPPORTED"
+        ):
             # Means that we're already returning a WETH or we're about `MAX_STEP_SUPPORTED`
             return []
         all_connecting_paths: List[List[ConnectingPath]] = []
@@ -139,7 +137,8 @@ class Algo:
         for pool in self.pools_by_token[token_in.address]:
             _, token_out = pool.get_token_pair_from_token_in(token_in.address)
             if (previous_pool and pool.address == previous_pool.address) or (
-                step == MAX_STEP_SUPPORTED and token_out.address != self.weth_address
+                step == self.config.get_int("MAX_STEP_SUPPORTED")
+                and token_out.address != self.weth_address
             ):
                 continue
 
@@ -156,7 +155,10 @@ class Algo:
                 connecting_paths,
             )
 
-        if step == MAX_STEP_SUPPORTED and end_weth_path_found is False:
+        if (
+            step == self.config.get_int("MAX_STEP_SUPPORTED")
+            and end_weth_path_found is False
+        ):
             return None
         return all_connecting_paths
 
@@ -198,21 +200,27 @@ class Algo:
         return all_arbitrage_paths
 
     def scan_arbitrage(self):
+        print("-----------------------------------------------------------")
+        print("----------------- WELCOME TO FARMERS VC -------------------")
+        print("-----------------------------------------------------------")
+        print(f"Scanning for arbitrage paths....")
         arbitrage_paths: List[ArbitragePath] = self.find_all_paths()
-        print(f"Scanning {len(arbitrage_paths)} arbitrage paths..")
-
+        print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
         while True:
             start_time = time.time()
             for arbitrage_path in arbitrage_paths:
                 token_out, amount_out_wei = self._calculate_single_path_arbitrage(
-                    arbitrage_path, WETH_AMOUNT_IN
+                    arbitrage_path, self.config.get_int("WETH_AMOUNT_IN")
                 )
                 self._analyze_arbitrage(
-                    WETH_AMOUNT_IN, amount_out_wei, token_out, arbitrage_path
+                    self.config.get_int("WETH_AMOUNT_IN"),
+                    amount_out_wei,
+                    token_out,
+                    arbitrage_path,
                 )
             print("--- Ended in %s seconds ---" % (time.time() - start_time))
-            if self.kovan:
-                time.sleep(5)
+            if self.config.kovan:
+                time.sleep(10)
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int
