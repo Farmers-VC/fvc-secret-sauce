@@ -99,7 +99,7 @@ class PrinterContract:
                     max_block_height,
                 ).estimateGas({"from": self.executor_address})
             except Exception as e:
-                self.notification.send_slack_errors(f"Gas Estimation Failed: {str(e)}")
+                print(f"Gas Estimation Failed: {str(e)}")
                 return
 
             try:
@@ -140,7 +140,7 @@ class PrinterContract:
             {
                 "chainId": 42 if self.config.kovan else 1,
                 "gas": self.config.get_int("ESTIMATE_GAS_EXECUTION"),
-                "gasPrice": int(gas_price * 1.5),
+                "gasPrice": int(gas_price * 1.2),
                 "nonce": self.ethereum.w3.eth.getTransactionCount(
                     self.executor_address
                 ),

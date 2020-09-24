@@ -1,6 +1,5 @@
 # import threading
 import time
-from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy
@@ -11,10 +10,11 @@ from services.ethereum.ethereum import Ethereum
 from services.exchange.factory import ExchangeFactory
 from services.exchange.iexchange import ExchangeInterface
 from services.notifications.notifications import Notification
+from services.path.path import PathFinder
 from services.pools.pool import Pool
 from services.pools.token import Token
 from services.printer.printer import PrinterContract
-from services.ttypes.arbitrage import ArbitragePath, ConnectingPath
+from services.ttypes.arbitrage import ArbitragePath
 
 
 class Algo:
@@ -32,12 +32,32 @@ class Algo:
         self.max_amount_in_weth = max_amount_in_weth
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
-        self.pools_by_token: Dict[str, List[Pool]] = defaultdict(list)
-        for pool in self.pools:
-            for token in pool.tokens:
-                self.pools_by_token[token.address.lower()].append(pool)
         self.notification = Notification(self.config)
         self.printer = PrinterContract(self.ethereum, self.notification, self.config)
+        self.path_finder = PathFinder(self.pools, self.config)
+
+    def scan_arbitrage(self):
+        print("-----------------------------------------------------------")
+        print("----------------- WELCOME TO FARMERS VC -------------------")
+        print("-----------------------------------------------------------")
+        print(f"Scanning for arbitrage paths....")
+        arbitrage_paths: List[ArbitragePath] = self.path_finder.find_all_paths()
+        print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
+        while True:
+            start_time = time.time()
+            for arbitrage_path in arbitrage_paths:
+                token_out, amount_out_wei = self._calculate_single_path_arbitrage(
+                    arbitrage_path, self.config.get_int("WETH_AMOUNT_IN")
+                )
+                self._analyze_arbitrage(
+                    self.config.get_int("WETH_AMOUNT_IN"),
+                    amount_out_wei,
+                    token_out,
+                    arbitrage_path,
+                )
+            print("--- Ended in %s seconds ---" % (time.time() - start_time))
+            if self.config.kovan:
+                time.sleep(10)
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
         exchange_by_pool_address = {}
@@ -52,10 +72,6 @@ class Algo:
     def _safety_checks(self, step: int, token_in: Token, token_out: Token) -> None:
         if step == 1 and token_in.address != self.weth_address:
             raise Exception("Only support entry with WETH")
-        if step == 2 and token_in.address == self.weth_address:
-            raise Exception("Step 2 should never be WETH as a token_in")
-        if step == 3 and token_in.address == self.weth_address:
-            raise Exception("Step 3 should never be WETH as a token_in")
         if (
             step == self.config.get_int("MAX_STEP_SUPPORTED")
             and token_out.address != self.weth_address
@@ -82,7 +98,6 @@ class Algo:
                 (
                     optimal_amount_in,
                     max_arbitrage_amount,
-                    min_amount_outs_wei,
                 ) = self._optimize_arbitrage_amount(
                     arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
                 )
@@ -91,7 +106,6 @@ class Algo:
                         arbitrage_path,
                         optimal_amount_in,
                         max_arbitrage_amount,
-                        min_amount_outs_wei,
                     )
         else:
             raise Exception("Token out is not WETH")
@@ -102,7 +116,7 @@ class Algo:
         amount_in_wei: int,
         arbitrage_amount: int,
         token_out: Token,
-    ) -> Tuple[int, int, List[int]]:
+    ) -> Tuple[int, int, int]:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount = arbitrage_amount
         optimal_amount_in = amount_in_wei
@@ -110,12 +124,10 @@ class Algo:
             1.1, self.max_amount_in_weth, self.config.get_float("INCREMENTAL_STEP")
         ):
             test_amount_in = token_out.to_wei(amount)
-            _, min_amount_outs_wei = self._calculate_single_path_arbitrage(
+            _, amount_out_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, test_amount_in
             )
-            new_arbitrage_amount = token_out.from_wei(
-                min_amount_outs_wei[-1] - test_amount_in
-            )
+            new_arbitrage_amount = token_out.from_wei(amount_out_wei - test_amount_in)
             if self.config.debug:
                 print(
                     f"[OPTIMIZATING][Amount in {token_out.from_wei(test_amount_in)} ETH] Arbitrage: {new_arbitrage_amount} ETH"
@@ -125,120 +137,19 @@ class Algo:
                 optimal_amount_in = test_amount_in
             else:
                 break
-        return optimal_amount_in, max_arbitrage_amount, min_amount_outs_wei
-
-    def _find_connecting_paths(
-        self, step: int, token_in: Token, previous_pool: Pool = None
-    ) -> List[List[ConnectingPath]]:
-        """Given a Token in, find all connecting paths from the list of all Pools avaivable"""
-        if token_in.address == self.weth_address or step > self.config.get_int(
-            "MAX_STEP_SUPPORTED"
-        ):
-            # Means that we're already returning a WETH or we're about `MAX_STEP_SUPPORTED`
-            return []
-        all_connecting_paths: List[List[ConnectingPath]] = []
-        end_weth_path_found = False
-        for pool in self.pools_by_token[token_in.address]:
-            _, token_out = pool.get_token_pair_from_token_in(token_in.address)
-            if (previous_pool and pool.address == previous_pool.address) or (
-                step == self.config.get_int("MAX_STEP_SUPPORTED")
-                and token_out.address != self.weth_address
-            ):
-                continue
-
-            end_weth_path_found = True
-            self._safety_checks(step, token_in, token_out)
-            connecting_paths: List[List[ConnectingPath]] = self._find_connecting_paths(
-                step + 1, token_out, pool
-            )
-            if connecting_paths is None:
-                # Means that no end path with WETH has been found - Invalid Path
-                continue
-            all_connecting_paths += self._combine_paths(
-                ConnectingPath(pool=pool, token_in=token_in, token_out=token_out),
-                connecting_paths,
-            )
-
-        if (
-            step == self.config.get_int("MAX_STEP_SUPPORTED")
-            and end_weth_path_found is False
-        ):
-            return None
-        return all_connecting_paths
-
-    def _combine_paths(
-        self, origin_path: ConnectingPath, available_paths: List[List[ConnectingPath]]
-    ) -> List[List[ConnectingPath]]:
-        combined_paths: List[List[ConnectingPath]] = []
-        if len(available_paths) == 0:
-            return [[origin_path]]
-        for available_path in available_paths:
-            combined_paths.append([origin_path] + available_path)
-        return combined_paths
-
-    def find_all_paths(self) -> List[ArbitragePath]:
-        all_arbitrage_paths: List[ArbitragePath] = []
-        for weth_pool in self.pools_by_token[self.weth_address]:
-            token_in, token_out = weth_pool.get_token_pair_from_token_in(
-                self.weth_address
-            )
-            self._safety_checks(
-                1,
-                token_in,
-                token_out,
-            )
-            connecting_paths: List[List[ConnectingPath]] = self._find_connecting_paths(
-                2, token_out, weth_pool
-            )
-            if connecting_paths is None or len(connecting_paths) == 0:
-                # Means that no end path with WETH has been found - Invalid Path
-                continue
-            combined_paths: List[List[ConnectingPath]] = self._combine_paths(
-                ConnectingPath(pool=weth_pool, token_in=token_in, token_out=token_out),
-                connecting_paths,
-            )
-            for combined_path in combined_paths:
-                all_arbitrage_paths.append(
-                    ArbitragePath(connecting_paths=combined_path)
-                )
-        return all_arbitrage_paths
-
-    def scan_arbitrage(self):
-        print("-----------------------------------------------------------")
-        print("----------------- WELCOME TO FARMERS VC -------------------")
-        print("-----------------------------------------------------------")
-        print(f"Scanning for arbitrage paths....")
-        arbitrage_paths: List[ArbitragePath] = self.find_all_paths()
-        print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
-        while True:
-            start_time = time.time()
-            for arbitrage_path in arbitrage_paths:
-                token_out, min_amount_outs_wei = self._calculate_single_path_arbitrage(
-                    arbitrage_path, self.config.get_int("WETH_AMOUNT_IN")
-                )
-                self._analyze_arbitrage(
-                    self.config.get_int("WETH_AMOUNT_IN"),
-                    min_amount_outs_wei[-1],
-                    token_out,
-                    arbitrage_path,
-                )
-            print("--- Ended in %s seconds ---" % (time.time() - start_time))
-            if self.config.kovan:
-                time.sleep(10)
+        return optimal_amount_in, max_arbitrage_amount
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int
-    ) -> Tuple[Token, List[int]]:
-        min_amount_outs_wei: List[int] = []
+    ) -> Tuple[Token, int]:
         for connecting_path in arbitrage_path.connecting_paths:
             token_out, amount_out_wei = self._simulate_one_exchange(
                 connecting_path.pool, connecting_path.token_in, amount_in_wei
             )
             if token_out.address.lower() != connecting_path.token_out.address.lower():
                 raise Exception("Token out problem")
-            min_amount_outs_wei.append(amount_out_wei)
             amount_in_wei = amount_out_wei
-        return token_out, min_amount_outs_wei
+        return token_out, amount_out_wei
 
     def _simulate_one_exchange(
         self, pool: Pool, token_in: Token, amount_in_wei: int
