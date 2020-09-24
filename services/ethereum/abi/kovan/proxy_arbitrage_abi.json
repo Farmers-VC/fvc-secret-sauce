@@ -8,12 +8,12 @@
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "WETH_ADDRESS",
+		"name": "_active",
 		"outputs": [
 			{
-				"internalType": "address",
+				"internalType": "bool",
 				"name": "",
-				"type": "address"
+				"type": "bool"
 			}
 		],
 		"payable": false,
@@ -34,6 +34,11 @@
 				"type": "uint8[]"
 			},
 			{
+				"internalType": "uint256[]",
+				"name": "minAmountOuts",
+				"type": "uint256[]"
+			},
+			{
 				"internalType": "uint256",
 				"name": "ethAmountIn",
 				"type": "uint256"
@@ -42,9 +47,23 @@
 				"internalType": "uint256",
 				"name": "estimateGasCost",
 				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "maxBlockNumber",
+				"type": "uint256"
 			}
 		],
 		"name": "arbitrage",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "toggleActive",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -66,6 +85,11 @@
 				"internalType": "address",
 				"name": "tokenAddress",
 				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
 			}
 		],
 		"name": "withdrawToken",

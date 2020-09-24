@@ -1,5 +1,5 @@
-# import threading
 import time
+from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy
@@ -30,6 +30,8 @@ class Algo:
         self.config = config
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.max_amount_in_weth = max_amount_in_weth
+        self.weth_amount_in_wei = self.config.get_int("WETH_AMOUNT_IN")
+        self.weth_token = Token(name="WETH", address=self.weth_address, decimal=18)
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
         self.notification = Notification(self.config)
@@ -45,14 +47,14 @@ class Algo:
         print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
         while True:
             start_time = time.time()
+            gas_price = self._calculate_gas_price()
             for arbitrage_path in arbitrage_paths:
-                token_out, all_amount_outs_wei = self._calculate_single_path_arbitrage(
-                    arbitrage_path, self.config.get_int("WETH_AMOUNT_IN")
+                arbitrage_path.gas_price = gas_price
+                _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
+                    arbitrage_path, self.weth_amount_in_wei
                 )
                 self._analyze_arbitrage(
-                    self.config.get_int("WETH_AMOUNT_IN"),
                     all_amount_outs_wei,
-                    token_out,
                     arbitrage_path,
                 )
             print("--- Ended in %s seconds ---" % (time.time() - start_time))
@@ -84,63 +86,63 @@ class Algo:
 
     def _analyze_arbitrage(
         self,
-        original_amount_in_wei: int,
         all_amount_outs_wei: List[int],
-        token_out: Token,
         arbitrage_path: ArbitragePath,
-        iteration=0,
     ) -> None:
-        if token_out.address == self.weth_address:
-            arbitrage_amount = token_out.from_wei(
-                all_amount_outs_wei[-1] - original_amount_in_wei
+        arbitrage_amount = all_amount_outs_wei[-1] - self.weth_amount_in_wei
+        if arbitrage_amount > self.weth_token.to_wei(0.03):
+            arbitrage_path_fill = self._optimize_arbitrage_amount(
+                arbitrage_path,
+                arbitrage_amount,
             )
-            if arbitrage_amount > 0.03:
-                (
-                    optimal_amount_in,
-                    max_arbitrage_amount,
-                ) = self._optimize_arbitrage_amount(
-                    arbitrage_path, original_amount_in_wei, arbitrage_amount, token_out
-                )
-                if max_arbitrage_amount > 0.20:
-                    self.printer.arbitrage(
-                        arbitrage_path,
-                        optimal_amount_in,
-                        max_arbitrage_amount,
-                        all_amount_outs_wei,
-                    )
-        else:
-            raise Exception("Token out is not WETH")
+            if (
+                arbitrage_path_fill.max_arbitrage_amount_wei
+                > arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.1)
+            ):
+                self.printer.arbitrage(arbitrage_path_fill)
 
     def _optimize_arbitrage_amount(
         self,
         arbitrage_path: ArbitragePath,
-        amount_in_wei: int,
-        arbitrage_amount: int,
-        token_out: Token,
+        arbitrage_amount_wei: int,
     ) -> Tuple[int, int, int]:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
-        max_arbitrage_amount = arbitrage_amount
-        optimal_amount_in = amount_in_wei
+        max_arbitrage_amount_wei = arbitrage_amount_wei
+        optimal_amount_in_wei = self.weth_amount_in_wei
+        min_amounts_by_weth_out: Dict[int, List[int]] = defaultdict(list)
+        all_optimal_amount_out_wei = []
         for amount in numpy.arange(
             1.1, self.max_amount_in_weth, self.config.get_float("INCREMENTAL_STEP")
         ):
-            test_amount_in = token_out.to_wei(amount)
+            test_amount_in = self.weth_token.to_wei(amount)
             _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, test_amount_in
             )
-            new_arbitrage_amount = token_out.from_wei(
-                all_amount_outs_wei[-1] - test_amount_in
-            )
+            new_arbitrage_amount_wei = all_amount_outs_wei[-1] - test_amount_in
+            min_amounts_by_weth_out[all_amount_outs_wei[-1]] = all_amount_outs_wei
             if self.config.debug:
                 print(
-                    f"[OPTIMIZATING][Amount in {token_out.from_wei(test_amount_in)} ETH] Arbitrage: {new_arbitrage_amount} ETH"
+                    f"[OPTIMIZATING][Amount in {self.weth_token.from_wei(test_amount_in)} ETH] Arbitrage: {self.weth_token.from_wei(new_arbitrage_amount_wei)} ETH"
                 )
-            if new_arbitrage_amount >= max_arbitrage_amount:
-                max_arbitrage_amount = new_arbitrage_amount
-                optimal_amount_in = test_amount_in
+
+            if new_arbitrage_amount_wei >= max_arbitrage_amount_wei:
+                max_arbitrage_amount_wei = new_arbitrage_amount_wei
+                optimal_amount_in_wei = test_amount_in
+                all_optimal_amount_out_wei = all_amount_outs_wei
             else:
                 break
-        return optimal_amount_in, max_arbitrage_amount
+
+        for weth_out in sorted(min_amounts_by_weth_out):
+            if weth_out > optimal_amount_in_wei + arbitrage_path.gas_price_execution:
+                arbitrage_path.all_min_amount_out_wei = min_amounts_by_weth_out[
+                    weth_out
+                ]
+                break
+
+        arbitrage_path.max_arbitrage_amount_wei = max_arbitrage_amount_wei
+        arbitrage_path.optimal_amount_in_wei = optimal_amount_in_wei
+        arbitrage_path.all_optimal_amount_out_wei = all_optimal_amount_out_wei
+        return arbitrage_path
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int
@@ -164,3 +166,10 @@ class Algo:
             token_in, token_out, amount_in_wei
         )
         return token_out, amount_out_wei
+
+    def _calculate_gas_price(self) -> int:
+        """Calculate the current gas price based on fast with high probability strategy"""
+        gas_price = self.ethereum.w3.eth.generateGasPrice()
+        if self.config.debug:
+            print(f"Gas Price = {self.ethereum.w3.fromWei(gas_price, 'gwei')} Gwei")
+        return gas_price

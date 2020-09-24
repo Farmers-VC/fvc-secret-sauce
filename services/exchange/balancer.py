@@ -1,6 +1,3 @@
-# from decimal import Decimal
-
-# from web3 import Web3
 from web3.eth import Contract
 
 from services.exchange.iexchange import ExchangeInterface
@@ -18,16 +15,16 @@ class BalancerExchange(ExchangeInterface):
     ) -> int:
         """Calculate the amount out (in Wei) based on `amount_in` (in Wei). """
         token_in_balance = self.contract.functions.getBalance(
-            token_in.address_checksum
+            token_in.checksum_address
         ).call()
         token_out_balance = self.contract.functions.getBalance(
-            token_out.address_checksum
+            token_out.checksum_address
         ).call()
         token_in_denormalized_weight = self.contract.functions.getDenormalizedWeight(
-            token_in.address_checksum
+            token_in.checksum_address
         ).call()
         token_out_denormalized_weight = self.contract.functions.getDenormalizedWeight(
-            token_out.address_checksum
+            token_out.checksum_address
         ).call()
         amount_out_wei = self.contract.functions.calcOutGivenIn(
             token_in_balance,
