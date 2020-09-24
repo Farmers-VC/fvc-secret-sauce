@@ -46,12 +46,12 @@ class Algo:
         while True:
             start_time = time.time()
             for arbitrage_path in arbitrage_paths:
-                token_out, amount_out_wei = self._calculate_single_path_arbitrage(
+                token_out, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                     arbitrage_path, self.config.get_int("WETH_AMOUNT_IN")
                 )
                 self._analyze_arbitrage(
                     self.config.get_int("WETH_AMOUNT_IN"),
-                    amount_out_wei,
+                    all_amount_outs_wei,
                     token_out,
                     arbitrage_path,
                 )
@@ -85,14 +85,14 @@ class Algo:
     def _analyze_arbitrage(
         self,
         original_amount_in_wei: int,
-        amount_out_wei: int,
+        all_amount_outs_wei: List[int],
         token_out: Token,
         arbitrage_path: ArbitragePath,
         iteration=0,
     ) -> None:
         if token_out.address == self.weth_address:
             arbitrage_amount = token_out.from_wei(
-                amount_out_wei - original_amount_in_wei
+                all_amount_outs_wei[-1] - original_amount_in_wei
             )
             if arbitrage_amount > 0.03:
                 (
@@ -106,6 +106,7 @@ class Algo:
                         arbitrage_path,
                         optimal_amount_in,
                         max_arbitrage_amount,
+                        all_amount_outs_wei,
                     )
         else:
             raise Exception("Token out is not WETH")
@@ -124,10 +125,12 @@ class Algo:
             1.1, self.max_amount_in_weth, self.config.get_float("INCREMENTAL_STEP")
         ):
             test_amount_in = token_out.to_wei(amount)
-            _, amount_out_wei = self._calculate_single_path_arbitrage(
+            _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, test_amount_in
             )
-            new_arbitrage_amount = token_out.from_wei(amount_out_wei - test_amount_in)
+            new_arbitrage_amount = token_out.from_wei(
+                all_amount_outs_wei[-1] - test_amount_in
+            )
             if self.config.debug:
                 print(
                     f"[OPTIMIZATING][Amount in {token_out.from_wei(test_amount_in)} ETH] Arbitrage: {new_arbitrage_amount} ETH"
@@ -141,15 +144,17 @@ class Algo:
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int
-    ) -> Tuple[Token, int]:
+    ) -> Tuple[Token, List[int]]:
+        all_amount_outs_wei: List[int] = []
         for connecting_path in arbitrage_path.connecting_paths:
             token_out, amount_out_wei = self._simulate_one_exchange(
                 connecting_path.pool, connecting_path.token_in, amount_in_wei
             )
             if token_out.address.lower() != connecting_path.token_out.address.lower():
                 raise Exception("Token out problem")
+            all_amount_outs_wei.append(amount_out_wei)
             amount_in_wei = amount_out_wei
-        return token_out, amount_out_wei
+        return token_out, all_amount_outs_wei
 
     def _simulate_one_exchange(
         self, pool: Pool, token_in: Token, amount_in_wei: int
