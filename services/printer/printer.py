@@ -38,7 +38,9 @@ class PrinterContract:
         pool_types = self._get_pool_types(arbitrage_path)
         gas_price = self._calculate_gas_price()
         gas_price_execution = gas_price * self.config.get_int("ESTIMATE_GAS_EXECUTION")
-        current_block_height = self.ethereum.w3.eth.blockNumber
+        max_block_height = self.ethereum.w3.eth.blockNumber + (
+            5 if self.config.kovan else 1
+        )
         valid_tx = self._validate_transactions(
             token_out,
             paths,
@@ -55,26 +57,39 @@ class PrinterContract:
                 max_arbitrage_amount,
                 gas_price,
                 gas_price_execution,
-                current_block_height + (5 if self.config.kovan else 1),
+                max_block_height,
             )
             self._send_transaction_on_chain(
-                paths, pool_types, amount_in_wei, gas_price_execution, gas_price
+                paths,
+                pool_types,
+                [0, 0, 0],  # TODO: min_amount_outs
+                amount_in_wei,
+                gas_price_execution,
+                gas_price,
+                max_block_height,
             )
 
     def _send_transaction_on_chain(
         self,
         paths: List[str],
         pool_types: List[int],
+        min_amount_outs: List[int],
         amount_in_wei: int,
         gas_price_execution: int,
         gas_price: int,
+        max_block_height: int,
     ) -> None:
         """Trigger the arbitrage transaction on-chain"""
         if self.config.send_tx:
             try:
                 # Run estimateGas to see if the transaction would go through
                 self.contract.functions.arbitrage(
-                    paths, pool_types, amount_in_wei, gas_price_execution
+                    paths,
+                    pool_types,
+                    min_amount_outs,
+                    amount_in_wei,
+                    gas_price_execution,
+                    max_block_height,
                 ).estimateGas({"from": self.executor_address})
             except Exception as e:
                 self.notification.send_slack_errors(f"Gas Estimation Failed: {str(e)}")
