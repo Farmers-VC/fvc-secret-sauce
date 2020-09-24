@@ -11,7 +11,7 @@ from services.pools.token import Token
 from services.ttypes.arbitrage import ArbitragePath
 from services.ttypes.contract import ContractTypeEnum
 
-MAX_LEGS_PER_TRADE = 3
+MAX_LEGS_PER_TRADE = 4
 BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
