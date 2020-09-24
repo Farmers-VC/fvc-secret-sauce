@@ -39,9 +39,8 @@ class PrinterContract:
         gas_price = self._calculate_gas_price()
         gas_price_execution = gas_price * self.config.get_int("ESTIMATE_GAS_EXECUTION")
         adjusted_amount_outs_wei = self._adjust_amount_outs_wei(amount_outs_wei)
-        max_block_height = self.ethereum.w3.eth.blockNumber + (
-            5 if self.config.kovan else 1
-        )
+        current_block = self.ethereum.w3.eth.blockNumber
+        max_block_height = current_block + (5 if self.config.kovan else 1)
         valid_tx = self._validate_transactions(
             token_out,
             paths,
@@ -60,6 +59,7 @@ class PrinterContract:
                 gas_price,
                 gas_price_execution,
                 max_block_height,
+                current_block,
             )
             self._send_transaction_on_chain(
                 paths,
@@ -227,12 +227,13 @@ class PrinterContract:
         gas_price: int,
         gas_price_execution: int,
         max_block_height: int,
+        current_block: int,
     ) -> None:
         paths = f"{arbitrage_path.connecting_paths[0].token_in.name} ({arbitrage_path.connecting_paths[0].pool.type.name})"
         for path in arbitrage_path.connecting_paths:
             paths += f" -> {path.token_out.name} ({path.pool.type.name})"
         beers = self._display_emoji_by_amount(max_arbitrage_amount, ":beer:")
-        arbitrage_result = f"{beers}\nOpportunity: *{max_arbitrage_amount}* ETH :moneybag:\nPath: {paths} \nAmount in: {token_out.from_wei(optimal_amount_in)} ETH\nGas Price: {self.ethereum.w3.fromWei(gas_price, 'gwei')} Gwei"
+        arbitrage_result = f"{beers}\nOpportunity: *{max_arbitrage_amount}* ETH :moneybag:\nPath: {paths} \nAmount in: {token_out.from_wei(optimal_amount_in)} ETH\nGas Price: {self.ethereum.w3.fromWei(gas_price, 'gwei')} Gwei\nCurrent Block: {current_block} (Max: {max_block_height})"
         contract_path_input = []
         contract_type_input = []
         min_amount_outs_input = []
