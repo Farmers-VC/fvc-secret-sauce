@@ -20,7 +20,6 @@ class PrinterContract:
         self.config = config
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.notification = notification
-        self.socks = self.config.get("MY_SOCKS")
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
 
     def arbitrage(
@@ -65,37 +64,42 @@ class PrinterContract:
     ) -> None:
         """Trigger the arbitrage transaction on-chain"""
         if self.config.send_tx:
-            try:
-                # Run estimateGas to see if the transaction would go through
-                self.contract.functions.arbitrage(
-                    paths, pool_types, amount_in_wei, gas_price_execution
-                ).estimateGas({"from": self.executor_address})
-            except Exception as e:
-                print(f"Gas Estimation Failed: {str(e)}")
-                return
+            if input("Execute arbitrage? y/n? ") == "y":
+                try:
+                    # Run estimateGas to see if the transaction would go through
+                    self.contract.functions.arbitrage(
+                        paths, pool_types, amount_in_wei, gas_price_execution
+                    ).estimateGas({"from": self.executor_address})
+                except Exception as e:
+                    print(f"Gas Estimation Failed: {str(e)}")
+                    return
 
-            try:
-                tx_hash = self._building_tx_and_signing_and_send(
-                    paths, pool_types, amount_in_wei, gas_price_execution, gas_price
-                )
-                receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
-                etherscan_url = (
-                    "https://kovan.etherscan.io/"
-                    if self.config.kovan
-                    else "https://etherscan.io"
-                )
-                tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
-                if receipt["status"] == 1:
-                    self.notification.send_slack_printing_tx(tx_hash_url, success=True)
-                    self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
-                else:
-                    self.notification.send_slack_printing_tx(tx_hash_url, success=False)
-            except TimeExhausted as e:
-                self.notification.send_slack_errors(
-                    f"Transaction failed {tx_hash_url}: {str(e)}"
-                )
-            except Exception as e:
-                self.notification.send_slack_errors(f"Exception: {str(e)}")
+                try:
+                    tx_hash = self._building_tx_and_signing_and_send(
+                        paths, pool_types, amount_in_wei, gas_price_execution, gas_price
+                    )
+                    receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
+                    etherscan_url = (
+                        "https://kovan.etherscan.io/"
+                        if self.config.kovan
+                        else "https://etherscan.io"
+                    )
+                    tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
+                    if receipt["status"] == 1:
+                        self.notification.send_slack_printing_tx(
+                            tx_hash_url, success=True
+                        )
+                        self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
+                    else:
+                        self.notification.send_slack_printing_tx(
+                            tx_hash_url, success=False
+                        )
+                except TimeExhausted as e:
+                    self.notification.send_slack_errors(
+                        f"Transaction failed {tx_hash_url}: {str(e)}"
+                    )
+                except Exception as e:
+                    self.notification.send_slack_errors(f"Exception: {str(e)}")
 
     def _building_tx_and_signing_and_send(
         self,
@@ -112,14 +116,14 @@ class PrinterContract:
             {
                 "chainId": 42 if self.config.kovan else 1,
                 "gas": self.config.get_int("ESTIMATE_GAS_EXECUTION"),
-                "gasPrice": int(gas_price * 1.2),
+                "gasPrice": int(gas_price * 1.1),
                 "nonce": self.ethereum.w3.eth.getTransactionCount(
                     self.executor_address
                 ),
             }
         )
         signed_tx = self.ethereum.w3.eth.account.sign_transaction(
-            unsigned_tx, self.socks
+            unsigned_tx, self.config.pk
         )
         tx_hash = self.ethereum.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         print(
@@ -216,5 +220,3 @@ class PrinterContract:
             f"\n{contract_input}\n------------------------------------------"
         )
         self.notification.send_slack_arbitrage(slack_message)
-        if max_arbitrage_amount > 1:
-            self.notification.send_twilio(arbitrage_result)

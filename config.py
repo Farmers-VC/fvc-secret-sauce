@@ -60,10 +60,17 @@ KOVAN_SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK = os.environ[
 
 
 class Config:
-    def __init__(self, kovan: bool = False, debug: bool = False, send_tx: bool = False):
+    def __init__(
+        self,
+        kovan: bool = False,
+        debug: bool = False,
+        send_tx: bool = False,
+        pk: str = None,
+    ):
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
+        self.pk = pk
 
     def get(self, name: str):
         if self.kovan:
