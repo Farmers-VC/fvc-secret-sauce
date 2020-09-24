@@ -32,13 +32,14 @@ class PrinterContract:
         arbitrage_path: ArbitragePath,
         amount_in_wei: int,
         max_arbitrage_amount: int,
+        amount_outs_wei: List[int],
     ) -> None:
         token_out = arbitrage_path.connecting_paths[-1].token_out
         paths = self._get_pool_paths(arbitrage_path)
         pool_types = self._get_pool_types(arbitrage_path)
         gas_price = self._calculate_gas_price()
         gas_price_execution = gas_price * self.config.get_int("ESTIMATE_GAS_EXECUTION")
-        min_amount_outs = self._get_min_amount_outs(arbitrage_path)
+        adjusted_amount_outs_wei = self._adjust_amount_outs_wei(amount_outs_wei)
         max_block_height = self.ethereum.w3.eth.blockNumber + (
             5 if self.config.kovan else 1
         )
@@ -53,7 +54,7 @@ class PrinterContract:
         if valid_tx:
             self._display_arbitrage(
                 arbitrage_path,
-                min_amount_outs,
+                amount_outs_wei,
                 token_out,
                 amount_in_wei,
                 max_arbitrage_amount,
@@ -64,15 +65,16 @@ class PrinterContract:
             self._send_transaction_on_chain(
                 paths,
                 pool_types,
-                min_amount_outs,
+                amount_outs_wei,
                 amount_in_wei,
                 gas_price_execution,
                 gas_price,
                 max_block_height,
             )
 
-    def _get_min_amount_outs(self, arbitrage_path: ArbitragePath) -> List[int]:
-        return [0, 0, 0]
+    def _adjust_amount_outs_wei(self, amount_outs_wei: List[int]) -> List[int]:
+        # TODO: Calculation to adjust
+        return amount_outs_wei
 
     def _send_transaction_on_chain(
         self,
