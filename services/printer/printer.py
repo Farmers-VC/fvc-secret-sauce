@@ -38,6 +38,7 @@ class PrinterContract:
         pool_types = self._get_pool_types(arbitrage_path)
         gas_price = self._calculate_gas_price()
         gas_price_execution = gas_price * self.config.get_int("ESTIMATE_GAS_EXECUTION")
+        min_amount_outs = self._get_min_amount_outs(arbitrage_path)
         max_block_height = self.ethereum.w3.eth.blockNumber + (
             5 if self.config.kovan else 1
         )
@@ -52,6 +53,7 @@ class PrinterContract:
         if valid_tx:
             self._display_arbitrage(
                 arbitrage_path,
+                min_amount_outs,
                 token_out,
                 amount_in_wei,
                 max_arbitrage_amount,
@@ -62,12 +64,15 @@ class PrinterContract:
             self._send_transaction_on_chain(
                 paths,
                 pool_types,
-                [0, 0, 0],  # TODO: min_amount_outs
+                min_amount_outs,
                 amount_in_wei,
                 gas_price_execution,
                 gas_price,
                 max_block_height,
             )
+
+    def _get_min_amount_outs(self, arbitrage_path: ArbitragePath) -> List[int]:
+        return [0, 0, 0]
 
     def _send_transaction_on_chain(
         self,
@@ -214,6 +219,7 @@ class PrinterContract:
     def _display_arbitrage(
         self,
         arbitrage_path: ArbitragePath,
+        min_amount_outs: List[int],
         token_out: Token,
         optimal_amount_in: int,
         max_arbitrage_amount: int,
@@ -233,17 +239,14 @@ class PrinterContract:
             try:
                 pool_address = arbitrage_path.connecting_paths[index].pool.address
                 contract_type = arbitrage_path.connecting_paths[index].pool.type.value
-                min_amount_out = 0  # TODO: Calculate min amount out per leg
             except Exception:
                 pool_address = BURN_ADDRESS
                 contract_type = ContractTypeEnum.NONE.value
-                min_amount_out = 0
 
             contract_path_input.append(pool_address)
             contract_type_input.append(str(contract_type))
-            min_amount_outs_input.append(min_amount_out)
 
-        contract_input = f'{contract_path_input},{contract_type_input},{min_amount_outs_input},"{optimal_amount_in}","{gas_price_execution}", "{max_block_height}"'.replace(
+        contract_input = f'{contract_path_input},{contract_type_input},{min_amount_outs},"{optimal_amount_in}","{gas_price_execution}", "{max_block_height}"'.replace(
             "'", '"'
         )
         slack_message = arbitrage_result + (
