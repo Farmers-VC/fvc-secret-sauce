@@ -11,7 +11,6 @@ from services.pools.token import Token
 from services.ttypes.arbitrage import ArbitragePath
 from services.ttypes.contract import ContractTypeEnum
 
-MAX_LEGS_PER_TRADE = 4
 BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
@@ -237,7 +236,7 @@ class PrinterContract:
         contract_path_input = []
         contract_type_input = []
         min_amount_outs_input = []
-        for index in range(MAX_LEGS_PER_TRADE):
+        for index in range(self.config.get_int("MAX_STEP_SUPPORTED")):
             try:
                 pool_address = arbitrage_path.connecting_paths[index].pool.address
                 contract_type = arbitrage_path.connecting_paths[index].pool.type.value
