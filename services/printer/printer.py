@@ -37,6 +37,17 @@ class PrinterContract:
     def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
         """Trigger the arbitrage transaction on-chain"""
         if self.config.send_tx:
+            executor_balance = self.ethereum.w3.eth.getBalance(
+                self.ethereum.w3.toChecksumAddress(self.executor_address)
+            )
+            if (
+                executor_balance < 2000000000000000000
+                or not arbitrage_path.contain_token(
+                    "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
+                )
+            ):
+                print("Balance under 2 ETH or does not contain PAMP")
+                return
             try:
                 # Run estimateGas to see if the transaction would go through
                 self.contract.functions.arbitrage(

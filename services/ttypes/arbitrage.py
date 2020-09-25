@@ -29,6 +29,12 @@ class ArbitragePath:
     max_arbitrage_amount_wei: int = None
     max_block_height: int = None
 
+    def contain_token(self, token_address: str) -> bool:
+        for path in self.connecting_paths:
+            if path.pool.contain_token(token_address):
+                return True
+        return False
+
     @property
     def pool_paths(self) -> List[str]:
         return [
