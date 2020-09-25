@@ -12,12 +12,11 @@ from services.pools.loader import PoolLoader
 @click.option("--kovan", is_flag=True, help="Point to Kovan test network")
 @click.option("--debug", is_flag=True, help="Display logs")
 @click.option("--send-tx", is_flag=True, help="Send arbitrage transactions on-chain")
-@click.option("--pk")
 @click.option(
     "--amount", default=6.0, help="Set max amount to trade with in WETH (Default: 6.0)"
 )
-def main(kovan: bool, debug: bool, send_tx: bool, amount: float, pk: str) -> None:
-    config = Config(kovan=kovan, debug=debug, send_tx=send_tx, pk=pk)
+def main(kovan: bool, debug: bool, send_tx: bool, amount: float) -> None:
+    config = Config(kovan=kovan, debug=debug, send_tx=send_tx)
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     w3 = _init_web3(config.get("ETHEREUM_WS_URI"))

@@ -95,7 +95,7 @@ class PrinterContract:
             }
         )
         signed_tx = self.ethereum.w3.eth.account.sign_transaction(
-            unsigned_tx, self.config.pk
+            unsigned_tx, self.config.get("MY_SOCKS")
         )
         tx_hash = self.ethereum.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         print(

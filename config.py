@@ -71,7 +71,6 @@ class Config:
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
-        self.pk = pk
 
     def get(self, name: str):
         if self.kovan:
