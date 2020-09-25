@@ -19,6 +19,7 @@ PRINTER_ADDRESS = os.environ["PRINTER_ADDRESS"]
 # Arbitrage
 MAX_STEP_SUPPORTED = 3
 ESTIMATE_GAS_EXECUTION = 600000
+ESTIMATE_GAS_LIMIT = 1000000
 WETH_AMOUNT_IN = Web3.toWei("1.0", "ether")
 INCREMENTAL_STEP = 0.1
 
@@ -70,7 +71,6 @@ class Config:
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
-        self.pk = pk
 
     def get(self, name: str):
         if self.kovan:
