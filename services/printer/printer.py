@@ -46,7 +46,9 @@ class PrinterContract:
                     "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
                 )
             ):
-                print("Balance under 2 ETH or does not contain PAMP")
+                print(
+                    f"Balance ({executor_balance}) under 2 ETH or does not contain PAMP"
+                )
                 return
             try:
                 # Run estimateGas to see if the transaction would go through
