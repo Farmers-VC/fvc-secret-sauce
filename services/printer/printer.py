@@ -24,24 +24,41 @@ class PrinterContract:
     ) -> None:
         current_block = self.ethereum.w3.eth.blockNumber
         arbitrage_path.max_block_height = current_block + (
-            15 if self.config.kovan else 2
+            15 if self.config.kovan else 3
         )
         valid_tx = self._validate_transactions(arbitrage_path)
         if valid_tx:
-            self._display_arbitrage(
-                arbitrage_path,
-                current_block,
-            )
-            self._send_transaction_on_chain(arbitrage_path)
+            self._send_transaction_on_chain(arbitrage_path, current_block)
 
-    def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
+    def _send_transaction_on_chain(
+        self, arbitrage_path: ArbitragePath, current_block: int
+    ) -> None:
         """Trigger the arbitrage transaction on-chain"""
+        try:
+            # Run estimateGas to see if the transaction would go through
+            self.contract.functions.arbitrage(
+                arbitrage_path.pool_paths,
+                arbitrage_path.pool_types,
+                arbitrage_path.all_min_amount_out_wei,
+                arbitrage_path.optimal_amount_in_wei,
+                arbitrage_path.gas_price_execution,
+                arbitrage_path.max_block_height,
+            ).estimateGas({"from": self.executor_address})
+        except Exception as e:
+            print(f"Gas Estimation Failed: {str(e)}")
+            return
+
+        self._display_arbitrage(
+            arbitrage_path,
+            current_block,
+        )
+
         if self.config.send_tx:
             executor_balance = self.ethereum.w3.eth.getBalance(
                 self.ethereum.w3.toChecksumAddress(self.executor_address)
             )
             if (
-                executor_balance < 2000000000000000000
+                executor_balance < 2400000000000000000
                 or not arbitrage_path.contain_token(
                     "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
                 )
@@ -50,20 +67,6 @@ class PrinterContract:
                     f"Balance ({executor_balance}) under 2 ETH or does not contain PAMP"
                 )
                 return
-            try:
-                # Run estimateGas to see if the transaction would go through
-                self.contract.functions.arbitrage(
-                    arbitrage_path.pool_paths,
-                    arbitrage_path.pool_types,
-                    arbitrage_path.all_min_amount_out_wei,
-                    arbitrage_path.optimal_amount_in_wei,
-                    arbitrage_path.gas_price_execution,
-                    arbitrage_path.max_block_height,
-                ).estimateGas({"from": self.executor_address})
-            except Exception as e:
-                print(f"Gas Estimation Failed: {str(e)}")
-                return
-
             try:
                 tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
                 receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
