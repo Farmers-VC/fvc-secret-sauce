@@ -51,7 +51,8 @@ class PoolLoader:
             pairs(
                 first: 1000,
                 where: {
-                    reserveUSD_gt: 50000,
+                    reserveUSD_lt: 1000000,
+                    reserveUSD_gt: 20000,
                 },
                 orderBy: volumeUSD,
                 orderDirection: desc){
@@ -106,7 +107,8 @@ class PoolLoader:
                 where: {
                     publicSwap: true,
                     tokensCount:2,
-                    liquidity_gt: 50000,
+                    liquidity_lt: 1000000,
+                    liquidity_gt: 30000,
                 },
                 orderBy: totalSwapVolume,
                 orderDirection: desc) {
@@ -156,13 +158,14 @@ def _load_tokens_yaml(token_path: str) -> List[Token]:
     tokens: List[Token] = []
     with open(token_path, "r") as stream:
         token_dict = yaml.safe_load(stream)
-        for token_yaml in token_dict["tokens"]:
-            token = Token(
-                name=token_yaml["name"],
-                address=token_yaml["address"],
-                decimal=token_yaml["decimal"],
-            )
-            tokens.append(token)
+        if token_dict["tokens"]:
+            for token_yaml in token_dict["tokens"]:
+                token = Token(
+                    name=token_yaml["name"],
+                    address=token_yaml["address"],
+                    decimal=token_yaml["decimal"],
+                )
+                tokens.append(token)
     return tokens
 
 
@@ -172,15 +175,16 @@ def _load_pools_yaml(pool_path: str, tokens: List[Token]) -> List[Pool]:
     pools: List[Pool] = []
     with open(pool_path, "r") as stream:
         pools_dict = yaml.safe_load(stream)
-        for pool_yaml in pools_dict["pools"]:
-            pool_tokens = [
-                token_by_name[token_name] for token_name in pool_yaml["tokens"]
-            ]
-            pool = Pool(
-                name=pool_yaml["name"],
-                pool_type=pool_yaml["type"],
-                address=pool_yaml["address"],
-                tokens=pool_tokens,
-            )
-            pools.append(pool)
+        if pools_dict["pools"]:
+            for pool_yaml in pools_dict["pools"]:
+                pool_tokens = [
+                    token_by_name[token_name] for token_name in pool_yaml["tokens"]
+                ]
+                pool = Pool(
+                    name=pool_yaml["name"],
+                    pool_type=pool_yaml["type"],
+                    address=pool_yaml["address"],
+                    tokens=pool_tokens,
+                )
+                pools.append(pool)
     return pools

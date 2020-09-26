@@ -26,9 +26,11 @@ class PrinterContract:
         arbitrage_path.max_block_height = current_block + (
             15 if self.config.kovan else 3
         )
-        valid_tx = self._validate_transactions(arbitrage_path)
-        if valid_tx:
-            self._send_transaction_on_chain(arbitrage_path, current_block)
+
+        print(arbitrage_path.print(current_block))
+        if self._safety_send(arbitrage_path):
+            self._display_arbitrage(arbitrage_path, current_block)
+            self._send_transaction_on_chain(arbitrage_path)
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
         """This function will simulate sending the transaction on-chain and let us know if it would go through"""
@@ -47,55 +49,42 @@ class PrinterContract:
             # print(f"This transaction would not go through: {str(e)}")
             return False
 
-    def _send_transaction_on_chain(
-        self, arbitrage_path: ArbitragePath, current_block: int
-    ) -> None:
+    def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
         """Trigger the arbitrage transaction on-chain"""
-
-        if self._safety_send(arbitrage_path):
-            self._display_arbitrage(
-                arbitrage_path,
-                current_block,
+        if self._validate_transactions(arbitrage_path) and self.config.send_tx:
+            executor_balance = self.ethereum.w3.eth.getBalance(
+                self.ethereum.w3.toChecksumAddress(self.executor_address)
             )
-
-            if self.config.send_tx:
-                executor_balance = self.ethereum.w3.eth.getBalance(
-                    self.ethereum.w3.toChecksumAddress(self.executor_address)
+            if (
+                executor_balance < 2400000000000000000
+                or not arbitrage_path.contain_token(
+                    "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
                 )
-                if (
-                    executor_balance < 2400000000000000000
-                    or not arbitrage_path.contain_token(
-                        "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
-                    )
-                ):
-                    print(
-                        f"Balance ({executor_balance}) under 2 ETH or does not contain PAMP"
-                    )
-                    return
-                try:
-                    tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
-                    receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
-                    etherscan_url = (
-                        "https://kovan.etherscan.io/"
-                        if self.config.kovan
-                        else "https://etherscan.io"
-                    )
-                    tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
-                    if receipt["status"] == 1:
-                        self.notification.send_slack_printing_tx(
-                            tx_hash_url, success=True
-                        )
-                        self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
-                    else:
-                        self.notification.send_slack_printing_tx(
-                            tx_hash_url, success=False
-                        )
-                except TimeExhausted as e:
-                    self.notification.send_slack_errors(
-                        f"Transaction failed {tx_hash_url}: {str(e)}"
-                    )
-                except Exception as e:
-                    self.notification.send_slack_errors(f"Exception: {str(e)}")
+            ):
+                print(
+                    f"Balance ({executor_balance}) under 2 ETH or does not contain PAMP"
+                )
+                return
+            try:
+                tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
+                receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
+                etherscan_url = (
+                    "https://kovan.etherscan.io/"
+                    if self.config.kovan
+                    else "https://etherscan.io"
+                )
+                tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
+                if receipt["status"] == 1:
+                    self.notification.send_slack_printing_tx(tx_hash_url, success=True)
+                    self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
+                else:
+                    self.notification.send_slack_printing_tx(tx_hash_url, success=False)
+            except TimeExhausted as e:
+                self.notification.send_slack_errors(
+                    f"Transaction failed {tx_hash_url}: {str(e)}"
+                )
+            except Exception as e:
+                self.notification.send_slack_errors(f"Exception: {str(e)}")
 
     def _building_tx_and_signing_and_send(
         self,
