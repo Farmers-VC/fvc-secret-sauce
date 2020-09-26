@@ -6,7 +6,8 @@ Options:
   --kovan         Point to Kovan test network
   --debug         Display logs
   --send-tx       Send arbitrage transactions on-chain
-  --amount FLOAT  Set max amount to trade with in WETH
+  --max-amount FLOAT  Set max amount to trade with in WETH
+  --min-amount FLOAT  Set min amount to trade with in WETH
   --help          Show this message and exit.
 ```
 
