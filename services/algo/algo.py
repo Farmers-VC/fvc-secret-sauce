@@ -16,6 +16,8 @@ from services.pools.token import Token
 from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath
 
+# from services.utils import timer
+
 
 class Algo:
     def __init__(
@@ -69,6 +71,7 @@ class Algo:
             exchange_by_pool_address[pool.address] = exchange
         return exchange_by_pool_address
 
+    # @timer
     def _analyze_arbitrage(
         self,
         all_amount_outs_wei: List[int],

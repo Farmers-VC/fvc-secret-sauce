@@ -48,7 +48,7 @@ def _init_web3(ethereum_ws_uri: str) -> Web3:
     w3 = Web3(Web3.WebsocketProvider(ethereum_ws_uri))
 
     gas_strategy = construct_time_based_gas_price_strategy(
-        max_wait_seconds=10, sample_size=5, probability=100
+        max_wait_seconds=1, sample_size=1, probability=100
     )
     w3.eth.setGasPriceStrategy(gas_strategy)
     return w3
