@@ -5,3 +5,6 @@ tokens:
   - name: USD
     address: '0xd233d1f6fd11640081abb8db125f722b5dc729dc'
     decimal: 9
+  - name: EBASE
+    address: '0x86fadb80d8d2cff3c3680819e4da99c10232ba0f'
+    decimal: 18
