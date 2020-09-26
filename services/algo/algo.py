@@ -47,7 +47,11 @@ class Algo:
         print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
         while True:
             start_time = time.time()
-            gas_price = self._calculate_gas_price()
+            try:
+                gas_price = self._calculate_gas_price()
+            except Exception as e:
+                print(str(e))
+                continue
             for arbitrage_path in arbitrage_paths:
                 arbitrage_path.gas_price = gas_price
                 _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
