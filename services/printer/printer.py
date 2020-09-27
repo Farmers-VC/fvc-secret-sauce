@@ -59,9 +59,9 @@ class PrinterContract:
                 not arbitrage_path.contain_token(
                     "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
                 )
-                and not arbitrage_path.contain_token(
-                    "0xd04785c4d8195e4a54d9dec3a9043872875ae9e2"
-                )
+                # and not arbitrage_path.contain_token(
+                #     "0xd04785c4d8195e4a54d9dec3a9043872875ae9e2"
+                # )
             ):
                 print(
                     f"Balance ({executor_balance}) under 2 ETH or does not contain PAMP"
