@@ -1,8 +1,6 @@
 import os
 import os.path
 
-from web3 import Web3
-
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Etherscan
@@ -20,7 +18,6 @@ PRINTER_ADDRESS = os.environ["PRINTER_ADDRESS"]
 MAX_STEP_SUPPORTED = 3
 ESTIMATE_GAS_EXECUTION = 500000
 ESTIMATE_GAS_LIMIT = 1000000
-WETH_AMOUNT_IN = Web3.toWei("1.0", "ether")
 INCREMENTAL_STEP = 0.1
 
 # Path
@@ -66,11 +63,14 @@ class Config:
         kovan: bool = False,
         debug: bool = False,
         send_tx: bool = False,
-        pk: str = None,
+        max_amount: float = 6.0,
+        min_amount: float = 3.0,
     ):
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
+        self.max_amount = max_amount
+        self.min_amount = min_amount
 
     def get(self, name: str):
         if self.kovan:

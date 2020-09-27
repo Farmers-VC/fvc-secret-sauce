@@ -6,13 +6,10 @@ class Token:
         self.name = name
         self.address = address.lower()
         self.decimal = decimal
+        self.checksum_address = Web3.toChecksumAddress(self.address)
 
     def to_wei(self, amount: float) -> int:
         return int(amount * (10 ** self.decimal))
 
     def from_wei(self, amount_in_wei: int) -> float:
         return amount_in_wei / (10 ** self.decimal)
-
-    @property
-    def checksum_address(self):
-        return Web3.toChecksumAddress(self.address)
