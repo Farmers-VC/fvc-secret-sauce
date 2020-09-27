@@ -46,7 +46,7 @@ class PrinterContract:
             ).estimateGas({"from": self.executor_address})
             return True
         except Exception as e:
-            # print(f"This transaction would not go through: {str(e)}")
+            print(f"This transaction would not go through: {str(e)}")
             return False
 
     def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
@@ -59,6 +59,9 @@ class PrinterContract:
                 executor_balance < 2400000000000000000
                 or not arbitrage_path.contain_token(
                     "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
+                )
+                or not arbitrage_path.contain_token(
+                    "0xd04785c4d8195e4a54d9dec3a9043872875ae9e2"
                 )
             ):
                 print(
@@ -102,7 +105,7 @@ class PrinterContract:
             {
                 "chainId": 42 if self.config.kovan else 1,
                 "gas": self.config.get_int("ESTIMATE_GAS_LIMIT"),
-                "gasPrice": int(arbitrage_path.gas_price * 1.1),
+                "gasPrice": int(arbitrage_path.gas_price),
                 "nonce": self.ethereum.w3.eth.getTransactionCount(
                     self.executor_address
                 ),

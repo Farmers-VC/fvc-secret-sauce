@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 
 import numpy
 from colored import fg, stylize
+from web3 import Web3
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -15,8 +16,7 @@ from services.pools.pool import Pool
 from services.pools.token import Token
 from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath
-
-# from services.utils import timer
+from services.utils import timer
 
 
 class Algo:
@@ -54,7 +54,7 @@ class Algo:
                 gas_price = self.ethereum.w3.eth.gasPrice
                 print(gas_price)
             for arbitrage_path in arbitrage_paths:
-                arbitrage_path.gas_price = gas_price
+                arbitrage_path.gas_price = int(gas_price * 1.5)
                 _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                     arbitrage_path, self.weth_amount_in_wei
                 )
@@ -62,7 +62,10 @@ class Algo:
                     all_amount_outs_wei,
                     arbitrage_path,
                 )
-            print("--- Ended in %s seconds ---" % (time.time() - start_time))
+            print(
+                f"--- Ended in %s seconds (Gas: {Web3.fromWei(gas_price, 'gwei')}) ---"
+                % (time.time() - start_time)
+            )
             if self.config.kovan:
                 time.sleep(10)
 
@@ -164,6 +167,7 @@ class Algo:
         )
         return token_out, amount_out_wei
 
+    # @timer
     def _calculate_gas_price(self) -> int:
         """Calculate the current gas price based on fast with high probability strategy"""
         gas_price = self.ethereum.w3.eth.generateGasPrice()

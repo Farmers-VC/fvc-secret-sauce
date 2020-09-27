@@ -1,5 +1,5 @@
 import click
-from web3 import Web3
+from web3 import Web3, middleware
 from web3.gas_strategies.time_based import construct_time_based_gas_price_strategy
 
 from config import Config
@@ -48,9 +48,12 @@ def _init_web3(ethereum_ws_uri: str) -> Web3:
     w3 = Web3(Web3.WebsocketProvider(ethereum_ws_uri))
 
     gas_strategy = construct_time_based_gas_price_strategy(
-        max_wait_seconds=1, sample_size=1, probability=100
+        max_wait_seconds=2, sample_size=1, probability=99
     )
     w3.eth.setGasPriceStrategy(gas_strategy)
+    # w3.middleware_onion.add(middleware.time_based_cache_middleware)
+    # w3.middleware_onion.add(middleware.latest_block_based_cache_middleware)
+    # w3.middleware_onion.add(middleware.simple_cache_middleware)
     return w3
 
 
