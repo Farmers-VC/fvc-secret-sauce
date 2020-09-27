@@ -1,5 +1,5 @@
 import click
-from web3 import Web3, middleware
+from web3 import Web3
 from web3.gas_strategies.time_based import construct_time_based_gas_price_strategy
 
 from config import Config
@@ -12,6 +12,7 @@ from services.pools.loader import PoolLoader
 @click.option("--kovan", is_flag=True, help="Point to Kovan test network")
 @click.option("--debug", is_flag=True, help="Display logs")
 @click.option("--send-tx", is_flag=True, help="Send arbitrage transactions on-chain")
+@click.option("--sniper", is_flag=True, help="Enable Arbitrage Sniping Strategy")
 @click.option(
     "--max-amount",
     default=6.0,
@@ -23,12 +24,18 @@ from services.pools.loader import PoolLoader
     help="Set min Amount to trade with in WETH (Default: 3.0)",
 )
 def main(
-    kovan: bool, debug: bool, send_tx: bool, max_amount: float, min_amount: float
+    kovan: bool,
+    debug: bool,
+    send_tx: bool,
+    sniper: bool,
+    max_amount: float,
+    min_amount: float,
 ) -> None:
     config = Config(
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,
+        sniper=sniper,
         max_amount=max_amount,
         min_amount=min_amount,
     )

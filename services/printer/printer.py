@@ -4,6 +4,7 @@ from web3.exceptions import TimeExhausted
 from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.notifications.notifications import Notification
+from services.strategy.sniper import Sniper
 from services.ttypes.arbitrage import ArbitragePath
 
 
@@ -17,6 +18,7 @@ class PrinterContract:
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.notification = notification
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
+        self.sniper = Sniper(self.ethereum, self.config)
 
     def arbitrage(
         self,
@@ -29,6 +31,8 @@ class PrinterContract:
 
         print(arbitrage_path.print(current_block))
         if self._safety_send(arbitrage_path):
+            if self.config.sniper:
+                self.sniper.scan_mempool_and_snipe(arbitrage_path)
             self._display_arbitrage(arbitrage_path, current_block)
             self._send_transaction_on_chain(arbitrage_path)
 

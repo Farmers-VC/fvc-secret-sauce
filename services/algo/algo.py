@@ -15,8 +15,10 @@ from services.path.path import PathFinder
 from services.pools.pool import Pool
 from services.pools.token import Token
 from services.printer.printer import PrinterContract
+from services.strategy.sniper import Sniper
 from services.ttypes.arbitrage import ArbitragePath
-from services.utils import timer
+
+# from services.utils import timer
 
 
 class Algo:
@@ -49,6 +51,8 @@ class Algo:
             start_time = time.time()
             try:
                 gas_price = self._calculate_gas_price()
+                sniper = Sniper(self.ethereum, self.config)
+                sniper.scan_mempool_and_snipe(None)
             except Exception as e:
                 print(str(e))
                 gas_price = self.ethereum.w3.eth.gasPrice
@@ -95,11 +99,11 @@ class Algo:
                 arbitrage_path,
                 arbitrage_amount,
             )
-            if (
-                arbitrage_path_fill.max_arbitrage_amount_wei
-                > arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.1)
-            ):
-                self.printer.arbitrage(arbitrage_path_fill)
+            # if (
+            #     arbitrage_path_fill.max_arbitrage_amount_wei
+            #     > arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.1)
+            # ):
+            self.printer.arbitrage(arbitrage_path_fill)
 
     def _optimize_arbitrage_amount(
         self,

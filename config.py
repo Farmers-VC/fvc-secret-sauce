@@ -63,12 +63,14 @@ class Config:
         kovan: bool = False,
         debug: bool = False,
         send_tx: bool = False,
+        sniper: bool = False,
         max_amount: float = 6.0,
         min_amount: float = 3.0,
     ):
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
+        self.sniper = sniper
         self.max_amount = max_amount
         self.min_amount = min_amount
 
