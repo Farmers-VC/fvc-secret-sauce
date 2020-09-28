@@ -32,18 +32,18 @@ class Sniper:
         Watch the mempool for an arbitrageur targetting `arbitrage_path`
         Once detected, we snipe them by submitting a transaction with a higher gas price.
         """
-        pending_txs = self.ethereum.w3_http.geth.txpool.content()["pending"]
+        all_pending_txs = self.ethereum.w3_http.geth.txpool.content()["pending"]
 
         arbitrage: List[SnipingArbitrage] = []
         for noob in self.noobs:
-            if noob.address in pending_txs:
-                pending_tx = pending_txs[noob.address]
-                arbitrage.append(
-                    SnipingArbitrage(
-                        pools=self._get_pools(pending_tx["input"]),
-                        gas_price=int(pending_tx["gasPrice"], 16),
+            if noob.address in all_pending_txs:
+                for pending_tx in all_pending_txs[noob.address].values()
+                    arbitrage.append(
+                        SnipingArbitrage(
+                            pools=self._get_pools(pending_tx["input"]),
+                            gas_price=int(pending_tx["gasPrice"], 16),
+                        )
                     )
-                )
         return arbitrage
 
     def _get_pools(self, contract_input: str) -> List[Pool]:
