@@ -1,11 +1,6 @@
 import time
-from typing import Dict, List
 
-from config import Config
 from services.ethereum.ethereum import Ethereum
-from services.exchange.factory import ExchangeFactory
-from services.exchange.iexchange import ExchangeInterface
-from services.pools.pool import Pool
 from services.ttypes.block import Block
 
 
@@ -37,14 +32,3 @@ def wait_new_block(ethereum: Ethereum, current_block: int) -> Block:
                 number=latest_block["number"], timestamp=latest_block["timestamp"]
             )
         time.sleep(0.5)
-
-
-def init_all_exchange_contracts(
-    ethereum: Ethereum, pools: List[Pool], config: Config
-) -> Dict[str, ExchangeInterface]:
-    exchange_by_pool_address = {}
-    for pool in pools:
-        contract = ethereum.init_contract(pool)
-        exchange = ExchangeFactory.create(contract, pool.type, debug=config.debug)
-        exchange_by_pool_address[pool.address] = exchange
-    return exchange_by_pool_address

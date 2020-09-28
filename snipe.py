@@ -44,6 +44,7 @@ def snipe(
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)
+    # breakpoint()
     if address:
         sniping_noobs = [SnipingNoob(address=Web3.toChecksumAddress(address))]
     else:
@@ -61,3 +62,6 @@ def _load_noobs_yaml(config: Config) -> List[SnipingNoob]:
                 noob = SnipingNoob(address=Web3.toChecksumAddress(noob_yaml["address"]))
                 noobs.append(noob)
     return noobs
+
+
+snipe()

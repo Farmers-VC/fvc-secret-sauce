@@ -23,6 +23,8 @@ class PrinterContract:
         arbitrage_path.max_block_height = block.number + (
             15 if self.config.kovan else 3
         )
+
+        print(arbitrage_path.print(block))
         if self._safety_send(arbitrage_path):
             self._display_arbitrage(arbitrage_path, block)
             self._send_transaction_on_chain(arbitrage_path)

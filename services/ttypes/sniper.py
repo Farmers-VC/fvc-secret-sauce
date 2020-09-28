@@ -13,3 +13,4 @@ class SnipingNoob:
 class SnipingArbitrage:
     pools: List[Pool]
     gas_price: int
+    tx_hash: str

@@ -1,12 +1,17 @@
+import time
 from typing import List
 
-from config import Config
-from services.ethereum.ethereum import Ethereum
-from services.pools.pool import Pool
-from services.ttypes.sniper import SnipingNoob
-from services.utils import init_all_exchange_contracts, wait_new_block
+from web3 import Web3
 
-# from services
+from config import Config
+from services.arbitrage.arbitrage import Arbitrage
+from services.ethereum.ethereum import Ethereum
+from services.path.path import PathFinder
+from services.pools.pool import Pool
+from services.strategy.sniper import Sniper
+from services.ttypes.arbitrage import ArbitragePath
+from services.ttypes.sniper import SnipingArbitrage, SnipingNoob
+from services.utils import wait_new_block
 
 
 class AlgoSnipe:
@@ -17,10 +22,10 @@ class AlgoSnipe:
         self.config = config
         self.pools_by_address = {pool.address: pool for pool in pools}
         self.noobs = noobs
-        self.exchange_by_pool_address = init_all_exchange_contracts(
-            self.ethereum, pools, self.config
+        self.sniper = Sniper(
+            self.ethereum, self.config, self.noobs, self.pools_by_address
         )
-        # self.sniper =
+        self.arbitrage = Arbitrage(pools, self.ethereum, self.config)
 
     def snipe_arbitrageur(self) -> None:
         print("-----------------------------------------------------------")
@@ -32,7 +37,20 @@ class AlgoSnipe:
             latest_block = wait_new_block(self.ethereum, current_block_number)
             current_block_number = latest_block.number
             start_time = time.time()
-            try:
-                gas_price = self._calculate_gas_price()
-            except Exception:
-                gas_price = self.ethereum.w3.eth.gasPrice
+            sniping_arbitrages: List[
+                SnipingArbitrage
+            ] = self.sniper.scan_mempool_and_snipe()
+            for sniping_arbitrage in sniping_arbitrages:
+                path_finder = PathFinder(sniping_arbitrage.pools, self.config)
+                arbitrage_paths: List[ArbitragePath] = path_finder.find_all_paths()
+                if arbitrage_paths and self.config.debug:
+                    print("Found {len(arbitrage_paths)} paths")
+                self.arbitrage.calc_arbitrage(
+                    arbitrage_paths, latest_block, sniping_arbitrage.gas_price + 1
+                )
+
+            gas_price = sniping_arbitrages[-1].gas_price if sniping_arbitrages else 0
+            print(
+                f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
+                % (time.time() - start_time)
+            )
