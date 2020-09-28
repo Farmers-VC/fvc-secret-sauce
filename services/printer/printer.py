@@ -4,8 +4,8 @@ from web3.exceptions import TimeExhausted
 from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.notifications.notifications import Notification
-from services.strategy.sniper import Sniper
 from services.ttypes.arbitrage import ArbitragePath
+from services.ttypes.block import Block
 
 
 class PrinterContract:
@@ -18,22 +18,13 @@ class PrinterContract:
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.notification = notification
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
-        self.sniper = Sniper(self.ethereum, self.config)
 
-    def arbitrage(
-        self,
-        arbitrage_path: ArbitragePath,
-    ) -> None:
-        current_block = self.ethereum.w3.eth.blockNumber
-        arbitrage_path.max_block_height = current_block + (
+    def arbitrage(self, arbitrage_path: ArbitragePath, block: Block) -> None:
+        arbitrage_path.max_block_height = block.number + (
             15 if self.config.kovan else 3
         )
-
-        print(arbitrage_path.print(current_block))
         if self._safety_send(arbitrage_path):
-            if self.config.sniper:
-                self.sniper.scan_mempool_and_snipe(arbitrage_path)
-            self._display_arbitrage(arbitrage_path, current_block)
+            self._display_arbitrage(arbitrage_path, block)
             self._send_transaction_on_chain(arbitrage_path)
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
@@ -56,21 +47,6 @@ class PrinterContract:
     def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
         """Trigger the arbitrage transaction on-chain"""
         if self._validate_transactions(arbitrage_path) and self.config.send_tx:
-            executor_balance = self.ethereum.w3.eth.getBalance(
-                self.ethereum.w3.toChecksumAddress(self.executor_address)
-            )
-            if executor_balance < 2400000000000000000 or (
-                not arbitrage_path.contain_token(
-                    "0xf0fac7104aac544e4a7ce1a55adf2b5a25c65bd1"
-                )
-                # and not arbitrage_path.contain_token(
-                #     "0xd04785c4d8195e4a54d9dec3a9043872875ae9e2"
-                # )
-            ):
-                print(
-                    f"Balance ({executor_balance}) under 2 ETH or does not contain PAMP"
-                )
-                return
             try:
                 tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
                 receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
@@ -162,7 +138,7 @@ class PrinterContract:
     def _display_arbitrage(
         self,
         arbitrage_path: ArbitragePath,
-        current_block: int,
+        current_block: Block,
     ) -> None:
         to_print = arbitrage_path.print(current_block)
         self.notification.send_slack_arbitrage(to_print)

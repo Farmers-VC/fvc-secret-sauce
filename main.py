@@ -1,6 +1,4 @@
 import click
-from web3 import Web3
-from web3.gas_strategies.time_based import construct_time_based_gas_price_strategy
 
 from config import Config
 from services.algo.algo import Algo
@@ -12,7 +10,6 @@ from services.pools.loader import PoolLoader
 @click.option("--kovan", is_flag=True, help="Point to Kovan test network")
 @click.option("--debug", is_flag=True, help="Display logs")
 @click.option("--send-tx", is_flag=True, help="Send arbitrage transactions on-chain")
-@click.option("--sniper", is_flag=True, help="Enable Arbitrage Sniping Strategy")
 @click.option(
     "--max-amount",
     default=6.0,
@@ -27,7 +24,6 @@ def main(
     kovan: bool,
     debug: bool,
     send_tx: bool,
-    sniper: bool,
     max_amount: float,
     min_amount: float,
 ) -> None:
@@ -35,33 +31,19 @@ def main(
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,
-        sniper=sniper,
+        sniper=False,
         max_amount=max_amount,
         min_amount=min_amount,
     )
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
-    w3 = _init_web3(config.get("ETHEREUM_WS_URI"))
-    ethereum = Ethereum(w3, config)
+    ethereum = Ethereum(config)
     algo = Algo(
         pools,
         ethereum,
         config=config,
     )
     algo.scan_arbitrage()
-
-
-def _init_web3(ethereum_ws_uri: str) -> Web3:
-    w3 = Web3(Web3.WebsocketProvider(ethereum_ws_uri))
-
-    gas_strategy = construct_time_based_gas_price_strategy(
-        max_wait_seconds=5, sample_size=1, probability=98, weighted=True
-    )
-    w3.eth.setGasPriceStrategy(gas_strategy)
-    # w3.middleware_onion.add(middleware.time_based_cache_middleware)
-    # w3.middleware_onion.add(middleware.latest_block_based_cache_middleware)
-    # w3.middleware_onion.add(middleware.simple_cache_middleware)
-    return w3
 
 
 main()

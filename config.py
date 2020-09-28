@@ -9,6 +9,7 @@ ETHERSCAN_API = "https://api.etherscan.io/api"
 
 # Ethereum
 ETHEREUM_WS_URI = os.environ["ETHEREUM_WS_URI"]
+ETHEREUM_HTTP_URI = os.environ["ETHEREUM_HTTP_URI"]
 EXECUTOR_ADDRESS = os.environ["EXECUTOR_ADDRESS"]
 MY_SOCKS = os.environ["MY_SOCKS"]
 WETH_ADDRESS = os.environ["WETH_ADDRESS"]
@@ -25,6 +26,7 @@ TOKEN_BLACKLIST_YAML_PATH = os.path.join(THIS_DIR, "pools/blacklist.yaml")
 TOKEN_YAML_PATH = os.path.join(THIS_DIR, "pools/tokens.yaml")
 POOL_YAML_PATH = os.path.join(THIS_DIR, "pools/pools.yaml")
 ABI_PATH = os.path.join(THIS_DIR, "services/ethereum/abi")
+SNIPING_NOOBS_YAML_PATH = os.path.join(THIS_DIR, "services/strategy/noobs.yaml")
 
 # Twilio
 AGENT_PHONE_NUMBERS = os.environ.get("AGENT_PHONE_NUMBERS")
@@ -41,6 +43,7 @@ SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK = os.environ[
 
 # Kovan Env
 KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
+KOVAN_ETHEREUM_HTTP_URI = os.environ["KOVAN_ETHEREUM_HTTP_URI"]
 KOVAN_EXECUTOR_ADDRESS = os.environ["KOVAN_EXECUTOR_ADDRESS"]
 KOVAN_MY_SOCKS = os.environ["KOVAN_MY_SOCKS"]
 KOVAN_POOL_YAML_PATH = os.path.join(THIS_DIR, "pools/kovan/pools.yaml")

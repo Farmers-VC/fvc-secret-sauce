@@ -52,7 +52,7 @@ class PoolLoader:
                 first: 1000,
                 where: {
                     reserveUSD_lt: 900000,
-                    reserveUSD_gt: 30000,
+                    reserveUSD_gt: 50000,
                 },
                 orderBy: volumeUSD,
                 orderDirection: desc){
@@ -108,7 +108,7 @@ class PoolLoader:
                     publicSwap: true,
                     tokensCount:2,
                     liquidity_lt: 900000,
-                    liquidity_gt: 30000,
+                    liquidity_gt: 50000,
                 },
                 orderBy: totalSwapVolume,
                 orderDirection: desc) {

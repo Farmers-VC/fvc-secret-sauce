@@ -17,6 +17,7 @@ from services.pools.token import Token
 from services.printer.printer import PrinterContract
 from services.strategy.sniper import Sniper
 from services.ttypes.arbitrage import ArbitragePath
+from services.ttypes.block import Block
 
 # from services.utils import timer
 
@@ -47,31 +48,46 @@ class Algo:
         print(f"Scanning for arbitrage paths....")
         arbitrage_paths: List[ArbitragePath] = self.path_finder.find_all_paths()
         print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
+        current_block_number = self.ethereum.w3.eth.blockNumber
         while True:
+            latest_block = self._wait_new_block(current_block_number)
+            current_block_number = latest_block.number
             start_time = time.time()
             try:
                 gas_price = self._calculate_gas_price()
-                sniper = Sniper(self.ethereum, self.config)
-                sniper.scan_mempool_and_snipe(None)
-            except Exception as e:
-                print(str(e))
+            except Exception:
                 gas_price = self.ethereum.w3.eth.gasPrice
-                print(gas_price)
             for arbitrage_path in arbitrage_paths:
                 arbitrage_path.gas_price = int(gas_price * 1.5)
                 _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                     arbitrage_path, self.weth_amount_in_wei
                 )
-                self._analyze_arbitrage(
+                arbitrage_path_fill = self._analyze_arbitrage(
                     all_amount_outs_wei,
                     arbitrage_path,
                 )
+                if arbitrage_path_fill:
+                    self.printer.arbitrage(arbitrage_path_fill, latest_block)
             print(
                 f"--- Ended in %s seconds (Gas: {Web3.fromWei(gas_price, 'gwei')}) ---"
                 % (time.time() - start_time)
             )
             if self.config.kovan:
                 time.sleep(10)
+
+    def _wait_new_block(self, current_block: int) -> Block:
+        start_time = time.time()
+        while True:
+            latest_block = self.ethereum.w3.eth.getBlock("latest")
+            if latest_block["number"] > current_block:
+                print(
+                    f"Block Number: {latest_block['number']} (%s seconds)"
+                    % (time.time() - start_time)
+                )
+                return Block(
+                    number=latest_block["number"], timestamp=latest_block["timestamp"]
+                )
+            time.sleep(0.5)
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
         exchange_by_pool_address = {}
@@ -88,7 +104,7 @@ class Algo:
         self,
         all_amount_outs_wei: List[int],
         arbitrage_path: ArbitragePath,
-    ) -> None:
+    ) -> ArbitragePath:
         arbitrage_amount = (
             all_amount_outs_wei[-1]
             - self.weth_amount_in_wei
@@ -99,17 +115,15 @@ class Algo:
                 arbitrage_path,
                 arbitrage_amount,
             )
-            # if (
-            #     arbitrage_path_fill.max_arbitrage_amount_wei
-            #     > arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.1)
-            # ):
-            self.printer.arbitrage(arbitrage_path_fill)
+            return arbitrage_path_fill
+        else:
+            None
 
     def _optimize_arbitrage_amount(
         self,
         arbitrage_path: ArbitragePath,
         arbitrage_amount_wei: int,
-    ) -> Tuple[int, int, int]:
+    ) -> ArbitragePath:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount_wei = arbitrage_amount_wei
         optimal_amount_in_wei = self.weth_amount_in_wei

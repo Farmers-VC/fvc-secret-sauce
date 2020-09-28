@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Set
 
 from web3 import Web3
 
 from config import Config
 from services.pools.pool import Pool
 from services.pools.token import Token
+from services.ttypes.block import Block
 
 config = Config()
 MAX_STEP_SUPPORTED = config.get_int("MAX_STEP_SUPPORTED")
@@ -36,6 +37,15 @@ class ArbitragePath:
         return False
 
     @property
+    def pool_and_token_addresses(self) -> Set[str]:
+        addresses: Set[str] = set()
+        for path in self.connecting_paths:
+            addresses.add(path.token_in.address)
+            addresses.add(path.token_out.address)
+            addresses.add(path.pool.address)
+        return addresses
+
+    @property
     def pool_paths(self) -> List[str]:
         return [
             Web3.toChecksumAddress(path.pool.address) for path in self.connecting_paths
@@ -64,13 +74,13 @@ class ArbitragePath:
             "'", '"'
         )
 
-    def print(self, current_block: int) -> str:
+    def print(self, block: Block) -> str:
         paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name} ({self.connecting_paths[0].pool.type.name})"
         for idx, path in enumerate(self.connecting_paths):
             path_token_out = path.token_out
             paths += f" -> {path_token_out.from_wei(self.all_optimal_amount_out_wei[idx])} {path_token_out.name} ({path.pool.type.name})"
         beers = self.display_emoji_by_amount(":beer:")
-        arbitrage_result = f"{beers}\nOpportunity: *{self.token_out.from_wei(self.max_arbitrage_amount_wei)}* ETH :moneybag:\nPath: {paths} \nAmount in: {self.token_out.from_wei(self.optimal_amount_in_wei)} ETH\nGas Price: {Web3.fromWei(self.gas_price, 'gwei')} Gwei\nCurrent Block: {current_block} (Max: {self.max_block_height})\n"
+        arbitrage_result = f"{beers}\nOpportunity: *{self.token_out.from_wei(self.max_arbitrage_amount_wei)}* ETH :moneybag:\nPath: {paths} \nAmount in: {self.token_out.from_wei(self.optimal_amount_in_wei)} ETH\nGas Price: {Web3.fromWei(self.gas_price, 'gwei')} Gwei\nCurrent Block: {block.number} (Max: {self.max_block_height}) (Timestamp: {block.timestamp})\n"
 
         arbitrage_result = arbitrage_result + self.tx_remix_str
         return arbitrage_result
