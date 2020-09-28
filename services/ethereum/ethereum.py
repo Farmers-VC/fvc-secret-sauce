@@ -4,6 +4,7 @@ import os
 import requests
 from web3 import Web3
 from web3.eth import Contract
+from web3.gas_strategies.time_based import construct_time_based_gas_price_strategy
 
 from config import Config
 from services.pools.pool import Pool
@@ -11,9 +12,21 @@ from services.ttypes.contract import ContractTypeEnum
 
 
 class Ethereum:
-    def __init__(self, w3: Web3, config: Config) -> None:
-        self.w3 = w3
+    def __init__(self, config: Config) -> None:
         self.config = config
+        self._init_web3()
+
+    def _init_web3(self) -> None:
+        self.w3 = Web3(Web3.WebsocketProvider(self.config.get("ETHEREUM_WS_URI")))
+        self.w3_http = Web3(Web3.HTTPProvider(self.config.get("ETHEREUM_HTTP_URI")))
+
+        gas_strategy = construct_time_based_gas_price_strategy(
+            max_wait_seconds=5, sample_size=1, probability=98, weighted=True
+        )
+        self.w3.eth.setGasPriceStrategy(gas_strategy)
+        # w3.middleware_onion.add(middleware.time_based_cache_middleware)
+        # w3.middleware_onion.add(middleware.latest_block_based_cache_middleware)
+        # w3.middleware_onion.add(middleware.simple_cache_middleware)
 
     def init_contract(self, pool: Pool) -> Contract:
         """From an address, initialize a web3.eth.Contract object"""
