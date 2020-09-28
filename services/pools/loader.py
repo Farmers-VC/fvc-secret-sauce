@@ -22,7 +22,7 @@ class PoolLoader:
 
         yaml_pools = self._load_pools_yaml()
         pools_without_blacklist = self._filter_blacklist_pools(
-            uniswap_pools + balancer_pools + yaml_pools
+            uniswap_pools + balancer_pools + sushiswap_pools + yaml_pools
         )
 
         return pools_without_blacklist
