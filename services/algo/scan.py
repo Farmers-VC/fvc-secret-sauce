@@ -8,21 +8,16 @@ from web3 import Web3
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
-from services.exchange.factory import ExchangeFactory
-from services.exchange.iexchange import ExchangeInterface
 from services.notifications.notifications import Notification
 from services.path.path import PathFinder
 from services.pools.pool import Pool
 from services.pools.token import Token
 from services.printer.printer import PrinterContract
-from services.strategy.sniper import Sniper
 from services.ttypes.arbitrage import ArbitragePath
-from services.ttypes.block import Block
-
-# from services.utils import timer
+from services.utils import init_all_exchange_contracts, wait_new_block
 
 
-class Algo:
+class AlgoScan:
     def __init__(
         self,
         pools: List[Pool],
@@ -36,7 +31,9 @@ class Algo:
         self.weth_token = Token(name="WETH", address=self.weth_address, decimal=18)
         self.weth_amount_in_wei = self.weth_token.to_wei(self.config.min_amount)
 
-        self.exchange_by_pool_address = self._init_all_exchange_contracts()
+        self.exchange_by_pool_address = init_all_exchange_contracts(
+            self.ethereum, pools, self.config
+        )
         self.notification = Notification(self.config)
         self.printer = PrinterContract(self.ethereum, self.notification, self.config)
         self.path_finder = PathFinder(self.pools, self.config)
@@ -50,7 +47,7 @@ class Algo:
         print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
         current_block_number = self.ethereum.w3.eth.blockNumber
         while True:
-            latest_block = self._wait_new_block(current_block_number)
+            latest_block = wait_new_block(self.ethereum, current_block_number)
             current_block_number = latest_block.number
             start_time = time.time()
             try:
@@ -74,30 +71,6 @@ class Algo:
             )
             if self.config.kovan:
                 time.sleep(10)
-
-    def _wait_new_block(self, current_block: int) -> Block:
-        start_time = time.time()
-        while True:
-            latest_block = self.ethereum.w3.eth.getBlock("latest")
-            if latest_block["number"] > current_block:
-                print(
-                    f"Block Number: {latest_block['number']} (%s seconds)"
-                    % (time.time() - start_time)
-                )
-                return Block(
-                    number=latest_block["number"], timestamp=latest_block["timestamp"]
-                )
-            time.sleep(0.5)
-
-    def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
-        exchange_by_pool_address = {}
-        for pool in self.pools:
-            contract = self.ethereum.init_contract(pool)
-            exchange = ExchangeFactory.create(
-                contract, pool.type, debug=self.config.debug
-            )
-            exchange_by_pool_address[pool.address] = exchange
-        return exchange_by_pool_address
 
     # @timer
     def _analyze_arbitrage(

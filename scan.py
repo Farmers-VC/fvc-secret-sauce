@@ -1,7 +1,7 @@
 import click
 
 from config import Config
-from services.algo.algo import Algo
+from services.algo.scan import AlgoScan
 from services.ethereum.ethereum import Ethereum
 from services.pools.loader import PoolLoader
 
@@ -19,7 +19,7 @@ from services.pools.loader import PoolLoader
     default=3.0,
     help="Set min Amount to trade with in WETH (Default: 3.0)",
 )
-def main(
+def scan(
     kovan: bool,
     debug: bool,
     max_amount: float,
@@ -29,14 +29,13 @@ def main(
         kovan=kovan,
         debug=debug,
         send_tx=False,
-        sniper=False,
         max_amount=max_amount,
         min_amount=min_amount,
     )
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)
-    algo = Algo(
+    algo = AlgoScan(
         pools,
         ethereum,
         config=config,
@@ -44,4 +43,4 @@ def main(
     algo.scan_arbitrage()
 
 
-main()
+scan()
