@@ -16,16 +16,15 @@ ARGUMENT_LENGTH = 64
 class Sniper:
     def __init__(
         self,
-        pool_mapping: Dict[str, Pool],
-        noobs: List[SnipingNoob],
         ethereum: Ethereum,
         config: Config,
+        noobs: List[SnipingNoob],
+        pools_by_address: Dict[str, Pool],
     ) -> None:
-        self.pool_mapping = pool_mapping
-        self.noobs = noobs
         self.ethereum = ethereum
         self.config = config
-        self._load_noobs_yaml()
+        self.noobs = noobs
+        self.pools_by_address = pools_by_address
 
     @timer
     def scan_mempool_and_snipe(self) -> List[SnipingArbitrage]:
@@ -55,7 +54,7 @@ class Sniper:
         pools: List[Pool] = []
         for arg in re.findall(".{%d}" % ARGUMENT_LENGTH, contract_input):
             address = f"0x{arg[2:42]}"
-            if address in pool_mapping:
-                pools.append(pool_mapping[address])
+            if address in pools_by_address:
+                pools.append(pools_by_address[address])
 
         return pools
