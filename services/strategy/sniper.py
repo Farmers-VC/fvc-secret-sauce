@@ -1,49 +1,61 @@
-from typing import List
+import re
+from typing import Dict, List
 
 import yaml
-from web3 import Web3
-
 from config import Config
 from services.ethereum.ethereum import Ethereum
+from services.pools.pool import Pool
 from services.ttypes.arbitrage import ArbitragePath
-from services.ttypes.sniper import SnipingNoob
+from services.ttypes.sniper import SnipingArbitrage, SnipingNoob
 from services.utils import timer
+from web3 import Web3
+
+ARGUMENT_LENGTH = 64
 
 
 class Sniper:
-    def __init__(self, ethereum: Ethereum, config: Config) -> None:
+    def __init__(
+        self,
+        pool_mapping: Dict[str, Pool],
+        noobs: List[SnipingNoob],
+        ethereum: Ethereum,
+        config: Config,
+    ) -> None:
+        self.pool_mapping = pool_mapping
+        self.noobs = noobs
         self.ethereum = ethereum
         self.config = config
         self._load_noobs_yaml()
 
-    def _load_noobs_yaml(self) -> None:
-        noobs: List[SnipingNoob] = []
-        with open(self.config.get("SNIPING_NOOBS_YAML_PATH"), "r") as stream:
-            noobs_dict = yaml.safe_load(stream)
-            if noobs_dict["noobs"]:
-                for noob_yaml in noobs_dict["noobs"]:
-                    noob = SnipingNoob(
-                        address=Web3.toChecksumAddress(noob_yaml["address"])
-                    )
-                    noobs.append(noob)
-            self.noobs = noobs
-
     @timer
-    def scan_mempool_and_snipe(self, arbitrage_path: ArbitragePath):
-        """Watch the mempool for an arbitrageur targetting `arbitrage_path`
+    def scan_mempool_and_snipe(self) -> List[SnipingArbitrage]:
+        """
+        Watch the mempool for an arbitrageur targetting `arbitrage_path`
         Once detected, we snipe them by submitting a transaction with a higher gas price.
         """
-        self._scan_mempool(arbitrage_path)
+        pending_txs = self.ethereum.w3_http.geth.txpool.content()["pending"]
 
-    def _scan_mempool(self, arbitrage_path):
-        # pool_and_token_addresses = arbitrage_path.pool_and_token_addresses
-        pending_tx = self.ethereum.w3_http.geth.txpool.content()["pending"]
+        arbitrage: List[SnipingArbitrage] = []
         for noob in self.noobs:
-            if noob.address in pending_tx:
-                print(pending_tx[noob.address])
-        # print(pending_tx)
-        # for _, tx_by_nonce in pending_tx.items():
-        #     for _, tx in tx_by_nonce.items():
-        #         if any(tx["input"] in addr for addr in pool_and_token_addresses):
-        #             print("Found arbitrage tx")
-        #             print(tx)
+            if noob.address in pending_txs:
+                pending_tx = pending_txs[noob.address]
+                arbitrage.append(
+                    SnipingArbitrage(
+                        pools=self._get_pools(pending_tx["input"]),
+                        gas_price=int(pending_tx["gasPrice"], 16),
+                    )
+                )
+        return arbitrage
+
+    def _get_pools(self, contract_input: str) -> List[Pool]:
+        """
+        Split contract input into arguments and check each argument to see if it is a pool arg.
+        Returns a list of Pool objects
+        """
+        pools: List[Pool] = []
+        for arg in re.findall(".{%d}" % ARGUMENT_LENGTH, contract_input):
+            address = f"0x{arg[2:42]}"
+            if address in pool_mapping:
+                pools.append(pool_mapping[address])
+
+        return pools
