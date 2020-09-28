@@ -9,7 +9,6 @@ from services.pools.loader import PoolLoader
 @click.command()
 @click.option("--kovan", is_flag=True, help="Point to Kovan test network")
 @click.option("--debug", is_flag=True, help="Display logs")
-@click.option("--send-tx", is_flag=True, help="Send arbitrage transactions on-chain")
 @click.option(
     "--max-amount",
     default=6.0,
@@ -23,14 +22,13 @@ from services.pools.loader import PoolLoader
 def main(
     kovan: bool,
     debug: bool,
-    send_tx: bool,
     max_amount: float,
     min_amount: float,
 ) -> None:
     config = Config(
         kovan=kovan,
         debug=debug,
-        send_tx=send_tx,
+        send_tx=False,
         sniper=False,
         max_amount=max_amount,
         min_amount=min_amount,
