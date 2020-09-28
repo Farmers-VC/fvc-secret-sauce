@@ -18,6 +18,7 @@ class PoolLoader:
 
         uniswap_pools = self._load_uniswap_pools()
         balancer_pools = self._load_balancer_pools()
+        sushiswap_pools = self._load_sushiswap_pools()
 
         yaml_pools = self._load_pools_yaml()
         pools_without_blacklist = self._filter_blacklist_pools(
@@ -28,7 +29,7 @@ class PoolLoader:
 
     def _filter_blacklist_pools(self, pools: List[Pool]) -> List[Pool]:
         blacklist_tokens = _load_tokens_yaml(
-            self.config.get("TOKEN_BLACKLIST_YAML_PATH")
+            self.config.get('TOKEN_BLACKLIST_YAML_PATH')
         )
         blacklist_addresses = [token.address.lower() for token in blacklist_tokens]
 
@@ -72,26 +73,76 @@ class PoolLoader:
             }
         }
         """
-        url = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
-        resp = requests.post(url, json={"query": query})
-        pairs = resp.json()["data"]["pairs"]
+        url = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
+        resp = requests.post(url, json={'query': query})
+        pairs = resp.json()['data']['pairs']
         pools: List[Pool] = []
         for pair in pairs:
             pools.append(
                 Pool(
-                    name=f"{pair['token0']['symbol']}/{pair['token1']['symbol']}",
-                    pool_type="UNISWAP",
-                    address=pair["id"],
+                    name=f'{pair['token0']['symbol']}/{pair['token1']['symbol']}',
+                    pool_type='UNISWAP',
+                    address=pair['id'],
                     tokens=[
                         Token(
-                            name=pair["token0"]["symbol"],
-                            address=pair["token0"]["id"],
-                            decimal=int(pair["token0"]["decimals"]),
+                            name=pair['token0']['symbol'],
+                            address=pair['token0']['id'],
+                            decimal=int(pair['token0']['decimals']),
                         ),
                         Token(
-                            name=pair["token1"]["symbol"],
-                            address=pair["token1"]["id"],
-                            decimal=int(pair["token1"]["decimals"]),
+                            name=pair['token1']['symbol'],
+                            address=pair['token1']['id'],
+                            decimal=int(pair['token1']['decimals']),
+                        ),
+                    ],
+                )
+            )
+        return pools
+
+    def _load_sushiswap_pools(self) -> List[Pool]:
+        # https://thegraph.com/explorer/subgraph/dmihal/sushiswap
+        query = """
+        {
+            pairs(
+                first: 1000,
+                orderBy: volumeUSD,
+                orderDirection: desc){
+                id
+                token0 {
+                  id
+                  name
+                  symbol
+                  decimals
+                }
+                token1 {
+                  id
+                  name
+                  symbol
+                  decimals
+                }
+            }
+        }
+        """
+        url = 'https://api.thegraph.com/subgraphs/name/dmihal/sushiswap'
+        resp = requests.post(url, json={'query': query})
+        pairs = resp.json()['data']['pairs']
+        pools: List[Pool] = []
+        for pair in pairs:
+            pools.append(
+                Pool(
+                    name=f'{pair['token0']['symbol']}/{pair['token1']['symbol']}',
+                    pool_type='SUSHISWAP',
+                    address=pair['id'],
+                    tokens=[
+                        Token(
+                            name=pair['token0']['symbol'],
+                            address=pair['token0']['id'],
+                            decimal=int(pair['token0']['decimals']),
+                        ),
+                        Token(
+                            name=pair['token1']['symbol'],
+                            address=pair['token1']['id'],
+                            decimal=int(pair['token1']['decimals']),
                         ),
                     ],
                 )
@@ -120,28 +171,27 @@ class PoolLoader:
                 }
             }
         }
-
         """
-        url = "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer"
-        resp = requests.post(url, json={"query": query})
-        pairs = resp.json()["data"]["pools"]
+        url = 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer'
+        resp = requests.post(url, json={'query': query})
+        pairs = resp.json()['data']['pools']
         pools: List[Pool] = []
         for pair in pairs:
             pools.append(
                 Pool(
-                    name=f"{pair['tokens'][0]['symbol']}/{pair['tokens'][1]['symbol']}",
-                    pool_type="BPOOL",
-                    address=pair["id"],
+                    name=f'{pair['tokens'][0]['symbol']}/{pair['tokens'][1]['symbol']}',
+                    pool_type='BPOOL',
+                    address=pair['id'],
                     tokens=[
                         Token(
-                            name=pair["tokens"][0]["symbol"],
-                            address=pair["tokens"][0]["address"],
-                            decimal=int(pair["tokens"][0]["decimals"]),
+                            name=pair['tokens'][0]['symbol'],
+                            address=pair['tokens'][0]['address'],
+                            decimal=int(pair['tokens'][0]['decimals']),
                         ),
                         Token(
-                            name=pair["tokens"][1]["symbol"],
-                            address=pair["tokens"][1]["address"],
-                            decimal=int(pair["tokens"][1]["decimals"]),
+                            name=pair['tokens'][1]['symbol'],
+                            address=pair['tokens'][1]['address'],
+                            decimal=int(pair['tokens'][1]['decimals']),
                         ),
                     ],
                 )
@@ -149,21 +199,21 @@ class PoolLoader:
         return pools
 
     def _load_pools_yaml(self) -> List[Pool]:
-        tokens = _load_tokens_yaml(self.config.get("TOKEN_YAML_PATH"))
-        pools = _load_pools_yaml(self.config.get("POOL_YAML_PATH"), tokens)
+        tokens = _load_tokens_yaml(self.config.get('TOKEN_YAML_PATH'))
+        pools = _load_pools_yaml(self.config.get('POOL_YAML_PATH'), tokens)
         return pools
 
 
 def _load_tokens_yaml(token_path: str) -> List[Token]:
     tokens: List[Token] = []
-    with open(token_path, "r") as stream:
+    with open(token_path, 'r') as stream:
         token_dict = yaml.safe_load(stream)
-        if token_dict["tokens"]:
-            for token_yaml in token_dict["tokens"]:
+        if token_dict['tokens']:
+            for token_yaml in token_dict['tokens']:
                 token = Token(
-                    name=token_yaml["name"],
-                    address=token_yaml["address"],
-                    decimal=token_yaml["decimal"],
+                    name=token_yaml['name'],
+                    address=token_yaml['address'],
+                    decimal=token_yaml['decimal'],
                 )
                 tokens.append(token)
     return tokens
@@ -173,17 +223,17 @@ def _load_pools_yaml(pool_path: str, tokens: List[Token]) -> List[Pool]:
     token_by_name: Dict[str, Token] = {token.name: token for token in tokens}
 
     pools: List[Pool] = []
-    with open(pool_path, "r") as stream:
+    with open(pool_path, 'r') as stream:
         pools_dict = yaml.safe_load(stream)
-        if pools_dict["pools"]:
-            for pool_yaml in pools_dict["pools"]:
+        if pools_dict['pools']:
+            for pool_yaml in pools_dict['pools']:
                 pool_tokens = [
-                    token_by_name[token_name] for token_name in pool_yaml["tokens"]
+                    token_by_name[token_name] for token_name in pool_yaml['tokens']
                 ]
                 pool = Pool(
-                    name=pool_yaml["name"],
-                    pool_type=pool_yaml["type"],
-                    address=pool_yaml["address"],
+                    name=pool_yaml['name'],
+                    pool_type=pool_yaml['type'],
+                    address=pool_yaml['address'],
                     tokens=pool_tokens,
                 )
                 pools.append(pool)
