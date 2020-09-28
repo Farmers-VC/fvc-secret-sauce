@@ -27,16 +27,13 @@ class AlgoScan:
         self.path_finder = PathFinder(self.pools, self.config)
 
     def scan_arbitrage(self):
-        print("-----------------------------------------------------------")
-        print("----------------- WELCOME TO FARMERS VC -------------------")
-        print("-----------------------------------------------------------")
         print(f"Scanning for arbitrage paths....")
         arbitrage_paths: List[ArbitragePath] = self.path_finder.find_all_paths()
         print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
-        current_block_number = self.ethereum.w3.eth.blockNumber
+        current_block = self.ethereum.w3.eth.blockNumber
         while True:
-            latest_block = wait_new_block(self.ethereum, current_block_number)
-            current_block_number = latest_block.number
+            latest_block = wait_new_block(self.ethereum, current_block)
+            current_block = latest_block
             start_time = time.time()
 
             try:

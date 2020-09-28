@@ -5,7 +5,6 @@ from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.notifications.notifications import Notification
 from services.ttypes.arbitrage import ArbitragePath
-from services.ttypes.block import Block
 
 
 class PrinterContract:
@@ -19,14 +18,16 @@ class PrinterContract:
         self.notification = notification
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
 
-    def arbitrage(self, arbitrage_path: ArbitragePath, block: Block) -> None:
-        arbitrage_path.max_block_height = block.number + (
+    def arbitrage(
+        self, arbitrage_path: ArbitragePath, latest_block: int, tx_hash: str = ""
+    ) -> None:
+        arbitrage_path.max_block_height = latest_block + (
             15 if self.config.kovan else 3
         )
 
-        print(arbitrage_path.print(block))
+        print(arbitrage_path.print(latest_block, tx_hash))
         if self._safety_send(arbitrage_path):
-            self._display_arbitrage(arbitrage_path, block)
+            self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
             self._send_transaction_on_chain(arbitrage_path)
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
@@ -138,9 +139,10 @@ class PrinterContract:
         return True
 
     def _display_arbitrage(
-        self,
-        arbitrage_path: ArbitragePath,
-        current_block: Block,
+        self, arbitrage_path: ArbitragePath, latest_block: int, tx_hash: str = ""
     ) -> None:
-        to_print = arbitrage_path.print(current_block)
-        self.notification.send_slack_arbitrage(to_print)
+        to_print = arbitrage_path.print(latest_block, tx_hash)
+        if self.config.is_snipe:
+            self.notification_send_snipe_noobs(to_print)
+        else:
+            self.notification.send_slack_arbitrage(to_print)

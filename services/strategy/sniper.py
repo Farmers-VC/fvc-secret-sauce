@@ -5,7 +5,8 @@ from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.pools.pool import Pool
 from services.ttypes.sniper import SnipingArbitrage, SnipingNoob
-from services.utils import timer
+
+# from services.utils import timer
 
 ARGUMENT_LENGTH = 64
 
@@ -22,8 +23,8 @@ class Sniper:
         self.config = config
         self.noobs = noobs
         self.pools_by_address = pools_by_address
+        self.last_txs: List[str] = []
 
-    @timer
     def scan_mempool_and_snipe(self) -> List[SnipingArbitrage]:
         """
         Watch the mempool for an arbitrageur targetting `arbitrage_path`
@@ -32,19 +33,22 @@ class Sniper:
         all_pending_txs = self.ethereum.w3_http.geth.txpool.content()["pending"]
 
         arbitrage: List[SnipingArbitrage] = []
+        pending_tx_hashes = []
         for noob in self.noobs:
             if noob.address in all_pending_txs:
                 for pending_tx in all_pending_txs[noob.address].values():
-                    arbitrage.append(
-                        SnipingArbitrage(
-                            pools=self._get_pools(pending_tx["input"]),
-                            gas_price=int(pending_tx["gasPrice"], 16),
-                            tx_hash=pending_tx["hash"],
+                    if pending_tx["hash"] not in self.last_txs:
+                        arbitrage.append(
+                            SnipingArbitrage(
+                                pools=self._get_pools(pending_tx["input"]),
+                                gas_price=int(pending_tx["gasPrice"], 16),
+                                tx_hash=pending_tx["hash"],
+                            )
                         )
-                    )
-        if self.config.debug:
-            print(f"Mempool: {arbitrage}")
+                        pending_tx_hashes.append(pending_tx["hash"])
 
+        if pending_tx_hashes:
+            self.last_txs = pending_tx_hashes
         return arbitrage
 
     def _get_pools(self, contract_input: str) -> List[Pool]:

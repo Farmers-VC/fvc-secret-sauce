@@ -12,7 +12,6 @@ from services.pools.pool import Pool
 from services.pools.token import Token
 from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath
-from services.ttypes.block import Block
 
 
 class Arbitrage:
@@ -29,7 +28,11 @@ class Arbitrage:
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
 
     def calc_arbitrage(
-        self, arbitrage_paths: List[ArbitragePath], latest_block: Block, gas_price: int
+        self,
+        arbitrage_paths: List[ArbitragePath],
+        latest_block: int,
+        gas_price: int,
+        tx_hash: str = "",
     ):
         for arbitrage_path in arbitrage_paths:
             arbitrage_path.gas_price = gas_price
@@ -40,8 +43,11 @@ class Arbitrage:
                 all_amount_outs_wei,
                 arbitrage_path,
             )
-            if arbitrage_path_fill:
-                self.printer.arbitrage(arbitrage_path_fill, latest_block)
+            if (
+                arbitrage_path_fill.max_arbitrage_amount_wei
+                > arbitrage_path.gas_price_execution
+            ):
+                self.printer.arbitrage(arbitrage_path_fill, latest_block, tx_hash)
 
     # @timer
     def _calculate_gas_price(self) -> int:
@@ -63,14 +69,15 @@ class Arbitrage:
             - self.weth_amount_in_wei
             - arbitrage_path.gas_price_execution
         )
-        if arbitrage_amount > 0:
-            arbitrage_path_fill = self._optimize_arbitrage_amount(
-                arbitrage_path,
-                arbitrage_amount,
-            )
-            return arbitrage_path_fill
-        else:
-            None
+        # if arbitrage_amount > 0:
+        arbitrage_path_fill = self._optimize_arbitrage_amount(
+            arbitrage_path,
+            arbitrage_amount,
+        )
+        return arbitrage_path_fill
+        # else:
+        #     print(f"Arbitrage Amount: {self.weth_token.from_wei(arbitrage_amount)} ETH")
+        #     return None
 
     def _optimize_arbitrage_amount(
         self,

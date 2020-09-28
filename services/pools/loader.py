@@ -13,6 +13,8 @@ class PoolLoader:
         self.config = config
 
     def load_all_pools(self) -> List[Pool]:
+
+        print("Loading Uniswap, Balancer, SushiSwap and others pools ...")
         if self.config.kovan:
             return self._load_pools_yaml()
 
@@ -23,7 +25,7 @@ class PoolLoader:
         pools_without_blacklist = self._filter_blacklist_pools(
             uniswap_pools + balancer_pools + yaml_pools
         )
-
+        print(f"Found {len(pools_without_blacklist)} pools")
         return pools_without_blacklist
 
     def _filter_blacklist_pools(self, pools: List[Pool]) -> List[Pool]:

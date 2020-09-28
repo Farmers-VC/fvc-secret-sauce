@@ -6,7 +6,6 @@ from web3 import Web3
 from config import Config
 from services.pools.pool import Pool
 from services.pools.token import Token
-from services.ttypes.block import Block
 
 config = Config()
 MAX_STEP_SUPPORTED = config.get_int("MAX_STEP_SUPPORTED")
@@ -74,13 +73,17 @@ class ArbitragePath:
             "'", '"'
         )
 
-    def print(self, block: Block) -> str:
+    def print(self, latest_block: int, tx_hash: str) -> str:
         paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name} ({self.connecting_paths[0].pool.type.name})"
         for idx, path in enumerate(self.connecting_paths):
             path_token_out = path.token_out
             paths += f" -> {path_token_out.from_wei(self.all_optimal_amount_out_wei[idx])} {path_token_out.name} ({path.pool.type.name})"
         beers = self.display_emoji_by_amount(":beer:")
-        arbitrage_result = f"{beers}\nOpportunity: *{self.token_out.from_wei(self.max_arbitrage_amount_wei)}* ETH :moneybag:\nPath: {paths} \nAmount in: {self.token_out.from_wei(self.optimal_amount_in_wei)} ETH\nGas Price: {Web3.fromWei(self.gas_price, 'gwei')} Gwei\nCurrent Block: {block.number} (Max: {self.max_block_height}) (Timestamp: {block.timestamp})\n"
+        arbitrage_result = f"{beers}\nOpportunity: *{self.token_out.from_wei(self.max_arbitrage_amount_wei)}* ETH :moneybag:\nPath: {paths} \nAmount in: {self.token_out.from_wei(self.optimal_amount_in_wei)} ETH\nGas Price: {Web3.fromWei(self.gas_price, 'gwei')} Gwei\nCurrent Block: {latest_block} (Max: {self.max_block_height})\n"
+        if tx_hash:
+            arbitrage_result = (
+                arbitrage_result + "Tx hash: https://etherscan.io/tx/{tx_hash}\n"
+            )
 
         arbitrage_result = arbitrage_result + self.tx_remix_str
         return arbitrage_result

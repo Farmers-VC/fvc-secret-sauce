@@ -40,6 +40,7 @@ SLACK_PRINTING_TX_WEBHOOK = os.environ["SLACK_PRINTING_TX_WEBHOOK"]
 SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK = os.environ[
     "SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK"
 ]
+SLACK_SNIPE_WEBHOOK = os.environ["SLACK_SNIPE_WEBHOOK"]
 
 # Kovan Env
 KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
@@ -68,12 +69,14 @@ class Config:
         send_tx: bool = False,
         max_amount: float = 6.0,
         min_amount: float = 3.0,
+        is_snipe: bool = False,
     ):
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
         self.max_amount = max_amount
         self.min_amount = min_amount
+        self.is_snipe = is_snipe
 
     def get(self, name: str):
         if self.kovan:

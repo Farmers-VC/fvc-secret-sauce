@@ -40,7 +40,11 @@ def snipe(
         send_tx=send_tx,
         max_amount=max_amount,
         min_amount=min_amount,
+        is_snipe=True,
     )
+    print("-----------------------------------------------------------")
+    print("----------------- SNIPING SOME NOOOOOBS -------------------")
+    print("-----------------------------------------------------------")
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)

@@ -1,7 +1,6 @@
 import time
 
 from services.ethereum.ethereum import Ethereum
-from services.ttypes.block import Block
 
 
 def timer(method):
@@ -19,7 +18,7 @@ def timer(method):
     return timed
 
 
-def wait_new_block(ethereum: Ethereum, current_block: int) -> Block:
+def wait_new_block(ethereum: Ethereum, current_block: int) -> int:
     start_time = time.time()
     while True:
         latest_block = ethereum.w3.eth.getBlock("latest")
@@ -28,7 +27,5 @@ def wait_new_block(ethereum: Ethereum, current_block: int) -> Block:
                 f"Block Number: {latest_block['number']} (%s seconds)"
                 % (time.time() - start_time)
             )
-            return Block(
-                number=latest_block["number"], timestamp=latest_block["timestamp"]
-            )
+            return latest_block["number"]
         time.sleep(0.5)

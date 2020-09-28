@@ -25,6 +25,10 @@ def scan(
     max_amount: float,
     min_amount: float,
 ) -> None:
+    print("-----------------------------------------------------------")
+    print("--------------- JUST SCANNING SOME ARBS -------------------")
+    print("-----------------------------------------------------------")
+
     config = Config(
         kovan=kovan,
         debug=debug,
