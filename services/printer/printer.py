@@ -161,8 +161,9 @@ class PrinterContract:
         tx_hash: str = "",
         consecutive_arbs: int = None,
     ) -> None:
-        to_print = arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)
-        if self.config.strategy == "snipe":
-            self.notification.send_snipe_noobs(to_print)
-        else:
-            self.notification.send_slack_arbitrage(to_print)
+        if consecutive_arbs is None or consecutive_arbs >= 2:
+            to_print = arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)
+            if self.config.strategy == "snipe":
+                self.notification.send_snipe_noobs(to_print)
+            else:
+                self.notification.send_slack_arbitrage(to_print)

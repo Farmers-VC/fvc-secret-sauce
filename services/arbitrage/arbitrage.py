@@ -42,13 +42,16 @@ class Arbitrage:
                 arbitrage_path,
             )
 
-            optimal_arbitrage_path.max_block_height = latest_block + max_block_allowed
-            if (
-                optimal_arbitrage_path.max_arbitrage_amount_wei
-                > optimal_arbitrage_path.gas_price_execution
-            ):
+            if optimal_arbitrage_path:
+                optimal_arbitrage_path.max_block_height = (
+                    latest_block + max_block_allowed
+                )
+                if (
+                    optimal_arbitrage_path.max_arbitrage_amount_wei
+                    > optimal_arbitrage_path.gas_price_execution
+                ):
 
-                positive_arbitrages.append(optimal_arbitrage_path)
+                    positive_arbitrages.append(optimal_arbitrage_path)
         return positive_arbitrages
 
     # @timer
@@ -66,20 +69,16 @@ class Arbitrage:
         all_amount_outs_wei: List[int],
         arbitrage_path: ArbitragePath,
     ) -> ArbitragePath:
-        arbitrage_amount = (
-            all_amount_outs_wei[-1]
-            - self.weth_amount_in_wei
-            - arbitrage_path.gas_price_execution
-        )
-        # if arbitrage_amount > 0:
-        optimal_arbitrage = self._optimize_arbitrage_amount(
-            arbitrage_path,
-            arbitrage_amount,
-        )
-        return optimal_arbitrage
-        # else:
-        #     print(f"Arbitrage Amount: {self.weth_token.from_wei(arbitrage_amount)} ETH")
-        #     return None
+        arbitrage_amount = all_amount_outs_wei[-1] - self.weth_amount_in_wei
+        if arbitrage_amount > 0:
+            optimal_arbitrage = self._optimize_arbitrage_amount(
+                arbitrage_path,
+                arbitrage_amount,
+            )
+            return optimal_arbitrage
+        else:
+            # print(f"Arbitrage Amount: {self.weth_token.from_wei(arbitrage_amount)} ETH")
+            return None
 
     def _optimize_arbitrage_amount(
         self,

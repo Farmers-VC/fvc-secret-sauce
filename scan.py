@@ -21,7 +21,7 @@ from services.pools.loader import PoolLoader
 )
 @click.option(
     "--min-liquidity",
-    default=30000,
+    default=50000,
     help="Set minimum liquidity (Default: 30,000)",
 )
 @click.option(

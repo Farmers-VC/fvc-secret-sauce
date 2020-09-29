@@ -33,7 +33,12 @@ class AlgoScan:
     def scan_arbitrage(self):
         print(f"Scanning for arbitrage paths....")
         arbitrage_paths: List[ArbitragePath] = self.path_finder.find_all_paths()
-        print(stylize(f"Found {len(arbitrage_paths)} arbitrage paths..", fg("yellow")))
+        print(
+            stylize(
+                f"Found {len(self.pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
+                fg("yellow"),
+            )
+        )
         current_block = self.ethereum.w3.eth.blockNumber
         while True:
             latest_block = wait_new_block(self.ethereum, current_block)
