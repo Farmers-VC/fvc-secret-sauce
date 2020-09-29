@@ -64,19 +64,23 @@ KOVAN_SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK = os.environ[
 class Config:
     def __init__(
         self,
+        strategy: str = "",
         kovan: bool = False,
         debug: bool = False,
         send_tx: bool = False,
         max_amount: float = 6.0,
         min_amount: float = 3.0,
-        is_snipe: bool = False,
+        min_liquidity: int = 30000,
+        max_liquidity: int = 500000,
     ):
+        self.strategy = strategy
         self.kovan = kovan
         self.debug = debug
         self.send_tx = send_tx
         self.max_amount = max_amount
         self.min_amount = min_amount
-        self.is_snipe = is_snipe
+        self.min_liquidity = min_liquidity
+        self.max_liquidity = max_liquidity
 
     def get(self, name: str):
         if self.kovan:
@@ -95,3 +99,13 @@ class Config:
     def get_float(self, name: str):
         result = self.get(name)
         return float(result)
+
+    def get_max_block_allowed(self) -> int:
+        if self.kovan:
+            return 100
+        if self.strategy == "snipe":
+            return 2
+        if self.strategy == "scan":
+            return 3
+        if self.strategy == "fresh":
+            return 5

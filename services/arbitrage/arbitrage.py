@@ -7,10 +7,8 @@ from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.exchange.factory import ExchangeFactory
 from services.exchange.iexchange import ExchangeInterface
-from services.notifications.notifications import Notification
 from services.pools.pool import Pool
 from services.pools.token import Token
-from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath
 
 
@@ -19,8 +17,6 @@ class Arbitrage:
         self.pools = pools
         self.ethereum = ethereum
         self.config = config
-        self.notification = Notification(self.config)
-        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.weth_token = Token(name="WETH", address=self.weth_address, decimal=18)
         self.weth_amount_in_wei = self.weth_token.to_wei(self.config.min_amount)
@@ -33,21 +29,27 @@ class Arbitrage:
         latest_block: int,
         gas_price: int,
         tx_hash: str = "",
-    ):
+    ) -> List[ArbitragePath]:
+        max_block_allowed = self.config.get_max_block_allowed()
+        positive_arbitrages: List[ArbitragePath] = []
         for arbitrage_path in arbitrage_paths:
             arbitrage_path.gas_price = gas_price
             _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, self.weth_amount_in_wei
             )
-            arbitrage_path_fill = self._analyze_arbitrage(
+            optimal_arbitrage_path = self._analyze_arbitrage(
                 all_amount_outs_wei,
                 arbitrage_path,
             )
+
+            optimal_arbitrage_path.max_block_height = latest_block + max_block_allowed
             if (
-                arbitrage_path_fill.max_arbitrage_amount_wei
-                > arbitrage_path.gas_price_execution
+                optimal_arbitrage_path.max_arbitrage_amount_wei
+                > optimal_arbitrage_path.gas_price_execution
             ):
-                self.printer.arbitrage(arbitrage_path_fill, latest_block, tx_hash)
+
+                positive_arbitrages.append(optimal_arbitrage_path)
+        return positive_arbitrages
 
     # @timer
     def _calculate_gas_price(self) -> int:
@@ -70,11 +72,11 @@ class Arbitrage:
             - arbitrage_path.gas_price_execution
         )
         # if arbitrage_amount > 0:
-        arbitrage_path_fill = self._optimize_arbitrage_amount(
+        optimal_arbitrage = self._optimize_arbitrage_amount(
             arbitrage_path,
             arbitrage_amount,
         )
-        return arbitrage_path_fill
+        return optimal_arbitrage
         # else:
         #     print(f"Arbitrage Amount: {self.weth_token.from_wei(arbitrage_amount)} ETH")
         #     return None
@@ -98,12 +100,8 @@ class Arbitrage:
             _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                 arbitrage_path, test_amount_in
             )
-            new_arbitrage_amount_wei = all_amount_outs_wei[-1] - test_amount_in
+            new_arbitrage_amount_wei = int(all_amount_outs_wei[-1] - test_amount_in)
             min_amounts_by_weth_out[all_amount_outs_wei[-1]] = all_amount_outs_wei
-            if self.config.debug:
-                print(
-                    f"[OPTIMIZATING][Amount in {self.weth_token.from_wei(test_amount_in)} ETH] Arbitrage: {self.weth_token.from_wei(new_arbitrage_amount_wei)} ETH"
-                )
 
             if new_arbitrage_amount_wei >= max_arbitrage_amount_wei:
                 max_arbitrage_amount_wei = new_arbitrage_amount_wei
@@ -122,6 +120,7 @@ class Arbitrage:
         arbitrage_path.max_arbitrage_amount_wei = max_arbitrage_amount_wei
         arbitrage_path.optimal_amount_in_wei = optimal_amount_in_wei
         arbitrage_path.all_optimal_amount_out_wei = all_optimal_amount_out_wei
+
         return arbitrage_path
 
     def _calculate_single_path_arbitrage(

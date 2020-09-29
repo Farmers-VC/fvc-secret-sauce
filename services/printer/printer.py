@@ -18,17 +18,32 @@ class PrinterContract:
         self.notification = notification
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
 
-    def arbitrage(
-        self, arbitrage_path: ArbitragePath, latest_block: int, tx_hash: str = ""
-    ) -> None:
-        arbitrage_path.max_block_height = latest_block + (
-            15 if self.config.kovan else 3
-        )
-
-        print(arbitrage_path.print(latest_block, tx_hash))
-        if self._safety_send(arbitrage_path):
-            self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
-            self._send_transaction_on_chain(arbitrage_path)
+    def arbitrage_on_chain(
+        self,
+        arbitrage_path: ArbitragePath,
+        latest_block: int,
+        tx_hash: str = "",
+        send_tx: bool = False,
+        consecutive_arbs: int = None,
+    ) -> bool:
+        """Return True if arbitrage is/would have been successful on-chain, False otherwise"""
+        if self._safety_send(arbitrage_path) and self._validate_transactions(
+            arbitrage_path
+        ):
+            self._display_arbitrage(
+                arbitrage_path, latest_block, tx_hash, consecutive_arbs
+            )
+            if send_tx:
+                return self._send_transaction_on_chain(arbitrage_path)
+            return True
+        else:
+            print(
+                stylize(
+                    f"Estimate Gas Failed {arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)}",
+                    fg("light_red"),
+                )
+            )
+            return False
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
         """This function will simulate sending the transaction on-chain and let us know if it would go through"""
@@ -47,29 +62,30 @@ class PrinterContract:
             print(f"This transaction would not go through: {str(e)}")
             return False
 
-    def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
+    def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> bool:
         """Trigger the arbitrage transaction on-chain"""
-        if self._validate_transactions(arbitrage_path) and self.config.send_tx:
-            try:
-                tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
-                receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
-                etherscan_url = (
-                    "https://kovan.etherscan.io/"
-                    if self.config.kovan
-                    else "https://etherscan.io"
-                )
-                tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
-                if receipt["status"] == 1:
-                    self.notification.send_slack_printing_tx(tx_hash_url, success=True)
-                    self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
-                else:
-                    self.notification.send_slack_printing_tx(tx_hash_url, success=False)
-            except TimeExhausted as e:
-                self.notification.send_slack_errors(
-                    f"Transaction failed {tx_hash_url}: {str(e)}"
-                )
-            except Exception as e:
-                self.notification.send_slack_errors(f"Exception: {str(e)}")
+        try:
+            tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
+            receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
+            etherscan_url = (
+                "https://kovan.etherscan.io/"
+                if self.config.kovan
+                else "https://etherscan.io"
+            )
+            tx_hash_url = f"{etherscan_url}/tx/{tx_hash}"
+            if receipt["status"] == 1:
+                self.notification.send_slack_printing_tx(tx_hash_url, success=True)
+                self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
+                return True
+            else:
+                self.notification.send_slack_printing_tx(tx_hash_url, success=False)
+        except TimeExhausted as e:
+            self.notification.send_slack_errors(
+                f"Transaction failed {tx_hash_url}: {str(e)}"
+            )
+        except Exception as e:
+            self.notification.send_slack_errors(f"Exception: {str(e)}")
+        return False
 
     def _building_tx_and_signing_and_send(
         self,
@@ -139,10 +155,14 @@ class PrinterContract:
         return True
 
     def _display_arbitrage(
-        self, arbitrage_path: ArbitragePath, latest_block: int, tx_hash: str = ""
+        self,
+        arbitrage_path: ArbitragePath,
+        latest_block: int,
+        tx_hash: str = "",
+        consecutive_arbs: int = None,
     ) -> None:
-        to_print = arbitrage_path.print(latest_block, tx_hash)
-        if self.config.is_snipe:
-            self.notification_send_snipe_noobs(to_print)
+        to_print = arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)
+        if self.config.strategy == "snipe":
+            self.notification.send_snipe_noobs(to_print)
         else:
             self.notification.send_slack_arbitrage(to_print)

@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -56,10 +56,10 @@ class Sniper:
         Split contract input into arguments and check each argument to see if it is a pool arg.
         Returns a list of Pool objects
         """
-        pools: List[Pool] = []
+        pools: Set[Pool] = set()
         for arg in re.findall(".{%d}" % ARGUMENT_LENGTH, contract_input[2:]):
             address = f"0x{arg[2:42]}"
             if address in self.pools_by_address:
-                pools.append(self.pools_by_address[address])
+                pools.add(self.pools_by_address[address])
 
-        return pools
+        return list(pools)

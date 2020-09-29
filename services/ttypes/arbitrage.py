@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Set
 
 from web3 import Web3
@@ -23,11 +23,16 @@ class ConnectingPath:
 class ArbitragePath:
     connecting_paths: List[ConnectingPath]
     optimal_amount_in_wei: int = None
-    all_optimal_amount_out_wei: List[int] = None
-    all_min_amount_out_wei: List[int] = None
+    all_optimal_amount_out_wei: List[int] = field(default_factory=list)
+    all_min_amount_out_wei: List[int] = field(default_factory=list)
     gas_price: int = None
     max_arbitrage_amount_wei: int = None
     max_block_height: int = None
+
+    @property
+    def path_id(self) -> str:
+        path_concat = "".join([path.pool.address for path in self.connecting_paths])
+        return path_concat
 
     def contain_token(self, token_address: str) -> bool:
         for path in self.connecting_paths:
@@ -69,20 +74,26 @@ class ArbitragePath:
         for path in self.connecting_paths:
             contract_path_input.append(path.pool.address)
             contract_type_input.append(str(path.pool.type.value))
-        return f"{contract_path_input},{contract_type_input},{[str(item) for item in self.all_min_amount_out_wei]},{self.optimal_amount_in_wei},{self.gas_price_execution},{self.max_block_height}\n\n".replace(
+        return f"Remix String: {contract_path_input},{contract_type_input},{[str(item) for item in self.all_min_amount_out_wei]},{self.optimal_amount_in_wei},{self.gas_price_execution},{self.max_block_height}\n\n".replace(
             "'", '"'
         )
 
-    def print(self, latest_block: int, tx_hash: str) -> str:
+    def print(
+        self, latest_block: int, tx_hash: str = "", consecutive_arbs: int = None
+    ) -> str:
         paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name} ({self.connecting_paths[0].pool.type.name})"
         for idx, path in enumerate(self.connecting_paths):
             path_token_out = path.token_out
             paths += f" -> {path_token_out.from_wei(self.all_optimal_amount_out_wei[idx])} {path_token_out.name} ({path.pool.type.name})"
         beers = self.display_emoji_by_amount(":beer:")
-        arbitrage_result = f"{beers}\nOpportunity: *{self.token_out.from_wei(self.max_arbitrage_amount_wei)}* ETH :moneybag:\nPath: {paths} \nAmount in: {self.token_out.from_wei(self.optimal_amount_in_wei)} ETH\nGas Price: {Web3.fromWei(self.gas_price, 'gwei')} Gwei\nCurrent Block: {latest_block} (Max: {self.max_block_height})\n"
+        arbitrage_result = f"{beers}\nOpportunity: *{self.token_out.from_wei(self.max_arbitrage_amount_wei)}* ETH :moneybag:\nPath: {paths} \nAmount in: {self.token_out.from_wei(self.optimal_amount_in_wei)} ETH\nGas Price: {Web3.fromWei(self.gas_price, 'gwei')} Gwei\nGas Execution: {self.token_out.from_wei(self.gas_price_execution)} ETH\nCurrent Block: {latest_block} (Max: {self.max_block_height})\nMin Amount out: {[str(item) for item in self.all_min_amount_out_wei]}\n"
         if tx_hash:
             arbitrage_result = (
-                arbitrage_result + "Tx hash: https://etherscan.io/tx/{tx_hash}\n"
+                arbitrage_result + f"Tx hash: https://etherscan.io/tx/{tx_hash}\n"
+            )
+        if consecutive_arbs:
+            arbitrage_result = (
+                arbitrage_result + f"Consecutive Arbitrage: {consecutive_arbs}\n"
             )
 
         arbitrage_result = arbitrage_result + self.tx_remix_str

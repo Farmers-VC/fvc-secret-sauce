@@ -35,12 +35,14 @@ def snipe(
     address: str,
 ) -> None:
     config = Config(
+        strategy="snipe",
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,
         max_amount=max_amount,
         min_amount=min_amount,
-        is_snipe=True,
+        min_liquidity=5000,
+        max_liquidity=1000000000,
     )
     print("-----------------------------------------------------------")
     print("----------------- SNIPING SOME NOOOOOBS -------------------")

@@ -53,7 +53,8 @@ class PoolLoader:
             pairs(
                 first: 1000,
                 where: {
-                    reserveUSD_gt: 20000,
+                    reserveUSD_lt: {0},
+                    reserveUSD_gt: {1},
                 },
                 orderBy: volumeUSD,
                 orderDirection: desc){
@@ -72,7 +73,9 @@ class PoolLoader:
                 }
             }
         }
-        """
+        """.format(
+            self.config.max_liquidity, self.config.min_liquidity
+        )
         url = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
         resp = requests.post(url, json={"query": query})
         pairs = resp.json()["data"]["pairs"]
@@ -108,7 +111,8 @@ class PoolLoader:
                 where: {
                     publicSwap: true,
                     tokensCount:2,
-                    liquidity_gt: 20000,
+                    liquidity_lt: {0},
+                    liquidity_gt: {1},
                 },
                 orderBy: totalSwapVolume,
                 orderDirection: desc) {
@@ -120,8 +124,9 @@ class PoolLoader:
                 }
             }
         }
-
-        """
+        """.format(
+            self.config.max_liquidity, self.config.min_liquidity
+        )
         url = "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer"
         resp = requests.post(url, json={"query": query})
         pairs = resp.json()["data"]["pools"]

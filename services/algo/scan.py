@@ -7,8 +7,10 @@ from web3 import Web3
 from config import Config
 from services.arbitrage.arbitrage import Arbitrage
 from services.ethereum.ethereum import Ethereum
+from services.notifications.notifications import Notification
 from services.path.path import PathFinder
 from services.pools.pool import Pool
+from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath
 from services.utils import wait_new_block
 
@@ -25,6 +27,8 @@ class AlgoScan:
         self.config = config
         self.arbitrage = Arbitrage(self.pools, self.ethereum, self.config)
         self.path_finder = PathFinder(self.pools, self.config)
+        self.notification = Notification(self.config)
+        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
 
     def scan_arbitrage(self):
         print(f"Scanning for arbitrage paths....")
@@ -41,7 +45,15 @@ class AlgoScan:
             except Exception:
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = int(gas_price * 1.5)
-            self.arbitrage.calc_arbitrage(arbitrage_paths, latest_block, gas_price)
+            positive_arbitrages = self.arbitrage.calc_arbitrage(
+                arbitrage_paths, latest_block, gas_price
+            )
+
+            for positive_arb in positive_arbitrages:
+                print(positive_arb.print(latest_block))
+                self.printer.arbitrage_on_chain(
+                    positive_arb, latest_block, send_tx=False
+                )
             print(
                 f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
                 % (time.time() - start_time)

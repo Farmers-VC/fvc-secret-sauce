@@ -1,14 +1,14 @@
 import click
 
 from config import Config
-from services.algo.scan import AlgoScan
+from services.algo.fresh import AlgoFresh
 from services.ethereum.ethereum import Ethereum
-from services.pools.loader import PoolLoader
 
 
 @click.command()
-@click.option("--kovan", is_flag=True, help="Point to Kovan test network")
+@click.option("--kovan", is_flag=True, help="point to kovan test network")
 @click.option("--debug", is_flag=True, help="Display logs")
+@click.option("--send-tx", is_flag=True, help="Flag to activate sending tx on-chain")
 @click.option(
     "--max-amount",
     default=6.0,
@@ -17,7 +17,7 @@ from services.pools.loader import PoolLoader
 @click.option(
     "--min-amount",
     default=3.0,
-    help="Set min Amount to trade with in WETH (Default: 3.0)",
+    help="set min amount to trade with in weth (default: 3.0)",
 )
 @click.option(
     "--min-liquidity",
@@ -29,37 +29,35 @@ from services.pools.loader import PoolLoader
     default=500000,
     help="Set max liquidity (Default: 500,000)",
 )
-def scan(
+def fresh(
     kovan: bool,
     debug: bool,
+    send_tx: bool,
     max_amount: float,
     min_amount: float,
     min_liquidity: int,
     max_liquidity: int,
 ) -> None:
     print("-----------------------------------------------------------")
-    print("--------------- JUST SCANNING SOME ARBS -------------------")
+    print("--------------- ARBITRAGING FRESH POOLS -------------------")
     print("-----------------------------------------------------------")
 
     config = Config(
-        strategy="scan",
+        strategy="fresh",
         kovan=kovan,
         debug=debug,
-        send_tx=False,
+        send_tx=send_tx,
         max_amount=max_amount,
         min_amount=min_amount,
         min_liquidity=min_liquidity,
         max_liquidity=max_liquidity,
     )
-    pool_loader = PoolLoader(config=config)
-    pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)
-    algo = AlgoScan(
-        pools,
+    algo = AlgoFresh(
         ethereum,
-        config=config,
+        config,
     )
-    algo.scan_arbitrage()
+    algo.arbitrage_fresh_pools()
 
 
-scan()
+fresh()
