@@ -58,6 +58,7 @@ class Arbitrage:
                 if (
                     optimal_arbitrage_path.max_arbitrage_amount_wei
                     > optimal_arbitrage_path.gas_price_execution
+                    + self.weth_token.to_wei(0.01)
                 ):
 
                     positive_arbitrages.append(optimal_arbitrage_path)
