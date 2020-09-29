@@ -5,9 +5,9 @@ import yaml
 from web3 import Web3
 
 from config import Config
-from services.algo.snipe import AlgoSnipe
 from services.ethereum.ethereum import Ethereum
 from services.pools.loader import PoolLoader
+from services.strategy.snipe import StrategySnipe
 from services.ttypes.sniper import SnipingNoob
 
 
@@ -41,7 +41,7 @@ def snipe(
         send_tx=send_tx,
         max_amount=max_amount,
         min_amount=min_amount,
-        min_liquidity=5000,
+        min_liquidity=20000,
         max_liquidity=1000000000,
     )
     print("-----------------------------------------------------------")
@@ -50,13 +50,12 @@ def snipe(
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)
-    # breakpoint()
     if address:
         sniping_noobs = [SnipingNoob(address=Web3.toChecksumAddress(address))]
     else:
         sniping_noobs = _load_noobs_yaml(config)
-    algo = AlgoSnipe(ethereum, config, pools, sniping_noobs)
-    algo.snipe_arbitrageur()
+    strategy = StrategySnipe(ethereum, config, pools, sniping_noobs)
+    strategy.snipe_arbitrageur()
 
 
 def _load_noobs_yaml(config: Config) -> List[SnipingNoob]:

@@ -1,8 +1,8 @@
 import click
 
 from config import Config
-from services.algo.fresh import AlgoFresh
 from services.ethereum.ethereum import Ethereum
+from services.strategy.fresh import StrategyFresh
 
 
 @click.command()
@@ -26,7 +26,7 @@ from services.ethereum.ethereum import Ethereum
 )
 @click.option(
     "--max-liquidity",
-    default=500000,
+    default=100000,
     help="Set max liquidity (Default: 500,000)",
 )
 def fresh(
@@ -53,11 +53,11 @@ def fresh(
         max_liquidity=max_liquidity,
     )
     ethereum = Ethereum(config)
-    algo = AlgoFresh(
+    strategy = StrategyFresh(
         ethereum,
         config,
     )
-    algo.arbitrage_fresh_pools()
+    strategy.arbitrage_fresh_pools()
 
 
 fresh()

@@ -1,9 +1,9 @@
 import click
 
 from config import Config
-from services.algo.scan import AlgoScan
 from services.ethereum.ethereum import Ethereum
 from services.pools.loader import PoolLoader
+from services.strategy.scan import StrategyScan
 
 
 @click.command()
@@ -54,12 +54,12 @@ def scan(
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)
-    algo = AlgoScan(
+    strategy = StrategyScan(
         pools,
         ethereum,
         config=config,
     )
-    algo.scan_arbitrage()
+    strategy.scan_arbitrage()
 
 
 scan()

@@ -1,7 +1,7 @@
-from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy
+from colored import fg, stylize
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -34,13 +34,22 @@ class Arbitrage:
         positive_arbitrages: List[ArbitragePath] = []
         for arbitrage_path in arbitrage_paths:
             arbitrage_path.gas_price = gas_price
-            _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
-                arbitrage_path, self.weth_amount_in_wei
-            )
-            optimal_arbitrage_path = self._analyze_arbitrage(
-                all_amount_outs_wei,
-                arbitrage_path,
-            )
+            try:
+                _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
+                    arbitrage_path, self.weth_amount_in_wei
+                )
+                optimal_arbitrage_path = self._analyze_arbitrage(
+                    all_amount_outs_wei,
+                    arbitrage_path,
+                )
+            except Exception as e:
+                print(
+                    stylize(
+                        f"Error calculating arbitrage path: {str(e)}",
+                        fg("light_red"),
+                    )
+                )
+                continue
 
             if optimal_arbitrage_path:
                 optimal_arbitrage_path.max_block_height = (
@@ -69,8 +78,12 @@ class Arbitrage:
         all_amount_outs_wei: List[int],
         arbitrage_path: ArbitragePath,
     ) -> ArbitragePath:
-        arbitrage_amount = all_amount_outs_wei[-1] - self.weth_amount_in_wei
-        if arbitrage_amount > 0:
+        arbitrage_amount = (
+            all_amount_outs_wei[-1]
+            - self.weth_amount_in_wei
+            - arbitrage_path.gas_price_execution
+        )
+        if arbitrage_amount + arbitrage_path.gas_price_execution > 0:
             optimal_arbitrage = self._optimize_arbitrage_amount(
                 arbitrage_path,
                 arbitrage_amount,
@@ -88,7 +101,6 @@ class Arbitrage:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount_wei = arbitrage_amount_wei
         optimal_amount_in_wei = self.weth_amount_in_wei
-        min_amounts_by_weth_out: Dict[int, List[int]] = defaultdict(list)
         all_optimal_amount_out_wei = []
         for amount in numpy.arange(
             self.config.min_amount + self.config.get_float("INCREMENTAL_STEP"),
@@ -100,7 +112,6 @@ class Arbitrage:
                 arbitrage_path, test_amount_in
             )
             new_arbitrage_amount_wei = int(all_amount_outs_wei[-1] - test_amount_in)
-            min_amounts_by_weth_out[all_amount_outs_wei[-1]] = all_amount_outs_wei
 
             if new_arbitrage_amount_wei >= max_arbitrage_amount_wei:
                 max_arbitrage_amount_wei = new_arbitrage_amount_wei
@@ -109,13 +120,13 @@ class Arbitrage:
             else:
                 break
 
-        for weth_out in sorted(min_amounts_by_weth_out):
-            if weth_out > optimal_amount_in_wei + arbitrage_path.gas_price_execution:
-                arbitrage_path.all_min_amount_out_wei = min_amounts_by_weth_out[
-                    weth_out
-                ]
-                break
-
+        percentage_to_max = (
+            optimal_amount_in_wei + arbitrage_path.gas_price_execution
+        ) / all_optimal_amount_out_wei[-1]
+        arbitrage_path.all_min_amount_out_wei = [
+            int(amount_out * percentage_to_max)
+            for amount_out in all_optimal_amount_out_wei
+        ]
         arbitrage_path.max_arbitrage_amount_wei = max_arbitrage_amount_wei
         arbitrage_path.optimal_amount_in_wei = optimal_amount_in_wei
         arbitrage_path.all_optimal_amount_out_wei = all_optimal_amount_out_wei

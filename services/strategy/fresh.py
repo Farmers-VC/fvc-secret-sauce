@@ -15,7 +15,7 @@ from services.ttypes.arbitrage import ArbitragePath
 from services.utils import wait_new_block
 
 
-class AlgoFresh:
+class StrategyFresh:
     def __init__(
         self,
         ethereum: Ethereum,
@@ -29,17 +29,20 @@ class AlgoFresh:
         self.arb_counter: Dict[str, int] = {}
 
     def _load_recent_arbitrage_path(self) -> List[ArbitragePath]:
-        print("Fetching fresh pools and finding new arbitrage paths")
-        pools = self.pool_loader.load_all_pools()
-        path_finder = PathFinder(pools, self.config)
-        arbitrage_paths = path_finder.find_all_paths()
-        self.arbitrage = Arbitrage(pools, self.ethereum, self.config)
-        print(
-            stylize(
-                f"Found {len(pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
-                fg("yellow"),
+        try:
+            print("Fetching fresh pools and finding new arbitrage paths")
+            pools = self.pool_loader.load_all_pools()
+            path_finder = PathFinder(pools, self.config)
+            arbitrage_paths = path_finder.find_all_paths()
+            self.arbitrage = Arbitrage(pools, self.ethereum, self.config)
+            print(
+                stylize(
+                    f"Found {len(pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
+                    fg("yellow"),
+                )
             )
-        )
+        except Exception:
+            return self._load_recent_arbitrage_path()
         return arbitrage_paths
 
     def arbitrage_fresh_pools(self):

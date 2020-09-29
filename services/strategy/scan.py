@@ -15,7 +15,7 @@ from services.ttypes.arbitrage import ArbitragePath
 from services.utils import wait_new_block
 
 
-class AlgoScan:
+class StrategyScan:
     def __init__(
         self,
         pools: List[Pool],

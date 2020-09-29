@@ -22,11 +22,11 @@ ESTIMATE_GAS_LIMIT = 1000000
 INCREMENTAL_STEP = 0.1
 
 # Path
-TOKEN_BLACKLIST_YAML_PATH = os.path.join(THIS_DIR, "pools/blacklist.yaml")
-TOKEN_YAML_PATH = os.path.join(THIS_DIR, "pools/tokens.yaml")
-POOL_YAML_PATH = os.path.join(THIS_DIR, "pools/pools.yaml")
+TOKEN_BLACKLIST_YAML_PATH = os.path.join(THIS_DIR, "yamls/blacklist.yaml")
+TOKEN_YAML_PATH = os.path.join(THIS_DIR, "yamls/tokens.yaml")
+POOL_YAML_PATH = os.path.join(THIS_DIR, "yamls/pools.yaml")
 ABI_PATH = os.path.join(THIS_DIR, "services/ethereum/abi")
-SNIPING_NOOBS_YAML_PATH = os.path.join(THIS_DIR, "services/strategy/noobs.yaml")
+SNIPING_NOOBS_YAML_PATH = os.path.join(THIS_DIR, "yamls/snipers.yaml")
 
 # Twilio
 AGENT_PHONE_NUMBERS = os.environ.get("AGENT_PHONE_NUMBERS")
@@ -47,11 +47,11 @@ KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
 KOVAN_ETHEREUM_HTTP_URI = os.environ["KOVAN_ETHEREUM_HTTP_URI"]
 KOVAN_EXECUTOR_ADDRESS = os.environ["KOVAN_EXECUTOR_ADDRESS"]
 KOVAN_MY_SOCKS = os.environ["KOVAN_MY_SOCKS"]
-KOVAN_POOL_YAML_PATH = os.path.join(THIS_DIR, "pools/kovan/pools.yaml")
+KOVAN_POOL_YAML_PATH = os.path.join(THIS_DIR, "yamls/kovan/pools.yaml")
 KOVAN_PRINTER_ADDRESS = os.environ["KOVAN_PRINTER_ADDRESS"]
 KOVAN_SLACK_WEBHOOK_URI = os.environ.get("KOVAN_SLACK_WEBHOOK_URI")
-KOVAN_TOKEN_BLACKLIST_YAML_PATH = os.path.join(THIS_DIR, "pools/blacklist.yaml")
-KOVAN_TOKEN_YAML_PATH = os.path.join(THIS_DIR, "pools/kovan/tokens.yaml")
+KOVAN_TOKEN_BLACKLIST_YAML_PATH = os.path.join(THIS_DIR, "yamls/blacklist.yaml")
+KOVAN_TOKEN_YAML_PATH = os.path.join(THIS_DIR, "yamls/kovan/tokens.yaml")
 KOVAN_WETH_ADDRESS = os.environ["KOVAN_WETH_ADDRESS"]
 KOVAN_INCREMENTAL_STEP = 1.0
 KOVAN_SLACK_ERRORS_WEBHOOK = os.environ["KOVAN_SLACK_ERRORS_WEBHOOK"]
