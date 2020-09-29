@@ -37,7 +37,7 @@ class StrategySnipe:
                 arbitrage_paths: List[ArbitragePath] = path_finder.find_all_paths()
                 if arbitrage_paths:
                     print(
-                        f"[Tx: {sniping_arbitrage.tx_hash}] Found {len(arbitrage_paths)} paths"
+                        f"[Pending Tx: {sniping_arbitrage.tx_hash}] Found {len(arbitrage_paths)} paths"
                     )
                 positive_arbitrages = self.arbitrage.calc_arbitrage(
                     arbitrage_paths,
@@ -47,7 +47,6 @@ class StrategySnipe:
                 )
 
                 for positive_arb in positive_arbitrages:
-                    print(positive_arb.print(latest_block, sniping_arbitrage.tx_hash))
                     self.printer.arbitrage_on_chain(
                         positive_arb,
                         latest_block,
