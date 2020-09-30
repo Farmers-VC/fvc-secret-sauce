@@ -1,4 +1,6 @@
 import click
+import threading
+import time
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -41,6 +43,41 @@ def fresh(
     print("-----------------------------------------------------------")
     print("--------------- ARBITRAGING FRESH POOLS -------------------")
     print("-----------------------------------------------------------")
+
+    thread_1 = threading.Thread(
+        name="thread1",
+        target=fresh_thread,
+        args=(kovan, debug, send_tx, max_amount, min_amount, 10000, 100000),
+    )
+
+    thread_2 = threading.Thread(
+        name="thread2",
+        target=fresh_thread,
+        args=(kovan, debug, send_tx, max_amount, min_amount, 100000, 1000000),
+    )
+
+    thread_3 = threading.Thread(
+        target=fresh_thread,
+        args=(kovan, debug, send_tx, max_amount, min_amount, 50000, 500000),
+    )
+
+    thread_4 = threading.Thread(
+        target=fresh_thread,
+        args=(kovan, debug, send_tx, max_amount, min_amount, 500000, 8000000),
+    )
+
+    thread_1.start()
+    time.sleep(1)
+    thread_2.start()
+    time.sleep(1)
+    thread_3.start()
+    time.sleep(1)
+    thread_4.start()
+
+
+def fresh_thread(
+    kovan, debug, send_tx, max_amount, min_amount, min_liquidity, max_liquidity
+):
 
     config = Config(
         strategy="fresh",
