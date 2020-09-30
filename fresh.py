@@ -45,13 +45,11 @@ def fresh(
     print("-----------------------------------------------------------")
 
     thread_1 = threading.Thread(
-        name="thread1",
         target=fresh_thread,
         args=(kovan, debug, send_tx, max_amount, min_amount, 10000, 100000),
     )
 
     thread_2 = threading.Thread(
-        name="thread2",
         target=fresh_thread,
         args=(kovan, debug, send_tx, max_amount, min_amount, 100000, 1000000),
     )
