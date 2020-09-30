@@ -6,6 +6,13 @@ from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.strategy.fresh import StrategyFresh
 
+LIQUIDITY_RANGES = [
+    (10000, 100000),
+    (100000, 1000000),
+    (50000, 500000),
+    (500000, 8000000),
+]
+
 
 @click.command()
 @click.option("--kovan", is_flag=True, help="point to kovan test network")
@@ -21,56 +28,31 @@ from services.strategy.fresh import StrategyFresh
     default=3.0,
     help="set min amount to trade with in weth (default: 3.0)",
 )
-@click.option(
-    "--min-liquidity",
-    default=30000,
-    help="Set minimum liquidity (Default: 30,000)",
-)
-@click.option(
-    "--max-liquidity",
-    default=100000,
-    help="Set max liquidity (Default: 500,000)",
-)
 def fresh(
     kovan: bool,
     debug: bool,
     send_tx: bool,
     max_amount: float,
     min_amount: float,
-    min_liquidity: int,
-    max_liquidity: int,
 ) -> None:
     print("-----------------------------------------------------------")
     print("--------------- ARBITRAGING FRESH POOLS -------------------")
     print("-----------------------------------------------------------")
 
-    thread_1 = threading.Thread(
-        target=fresh_thread,
-        args=(kovan, debug, send_tx, max_amount, min_amount, 10000, 100000),
-    )
-
-    thread_2 = threading.Thread(
-        target=fresh_thread,
-        args=(kovan, debug, send_tx, max_amount, min_amount, 100000, 1000000),
-    )
-
-    thread_3 = threading.Thread(
-        target=fresh_thread,
-        args=(kovan, debug, send_tx, max_amount, min_amount, 50000, 500000),
-    )
-
-    thread_4 = threading.Thread(
-        target=fresh_thread,
-        args=(kovan, debug, send_tx, max_amount, min_amount, 500000, 8000000),
-    )
-
-    thread_1.start()
-    time.sleep(1)
-    thread_2.start()
-    time.sleep(1)
-    thread_3.start()
-    time.sleep(1)
-    thread_4.start()
+    for min_liquidity, max_liquidity in LIQUIDITY_RANGES:
+        threading.Thread(
+            target=fresh_thread,
+            args=(
+                kovan,
+                debug,
+                send_tx,
+                max_amount,
+                min_amount,
+                min_liquidity,
+                max_liquidity,
+            ),
+        ).start()
+        time.sleep(0.1)
 
 
 def fresh_thread(
