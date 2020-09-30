@@ -15,6 +15,8 @@ class PoolLoader:
     def load_all_pools(self) -> List[Pool]:
 
         print("Loading Uniswap, Balancer, SushiSwap and others pools ...")
+        print("Max Liquidity: ", self.config.max_liquidity)
+        print("Min Liquidity: ", self.config.min_liquidity)
         if self.config.kovan:
             return self._load_pools_yaml()
 
