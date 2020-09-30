@@ -1,5 +1,7 @@
 import time
 
+from services.ethereum.ethereum import Ethereum
+
 
 def timer(method):
     def timed(*args, **kw):
@@ -14,3 +16,16 @@ def timer(method):
         return result
 
     return timed
+
+
+def wait_new_block(ethereum: Ethereum, current_block: int) -> int:
+    start_time = time.time()
+    while True:
+        latest_block = ethereum.w3.eth.getBlock("latest")
+        if latest_block["number"] > current_block:
+            print(
+                f"Block Number: {latest_block['number']} (%s seconds)"
+                % (time.time() - start_time)
+            )
+            return latest_block["number"]
+        time.sleep(0.5)

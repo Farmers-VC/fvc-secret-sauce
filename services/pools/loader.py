@@ -13,6 +13,8 @@ class PoolLoader:
         self.config = config
 
     def load_all_pools(self) -> List[Pool]:
+
+        print("Loading Uniswap, Balancer, SushiSwap and others pools ...")
         if self.config.kovan:
             return self._load_pools_yaml()
 
@@ -24,7 +26,7 @@ class PoolLoader:
         pools_without_blacklist = self._filter_blacklist_pools(
             uniswap_pools + balancer_pools + sushiswap_pools + yaml_pools
         )
-
+        print(f"Found {len(pools_without_blacklist)} pools!")
         return pools_without_blacklist
 
     def _filter_blacklist_pools(self, pools: List[Pool]) -> List[Pool]:
@@ -47,31 +49,31 @@ class PoolLoader:
 
     def _load_uniswap_pools(self) -> List[Pool]:
         # https://thegraph.com/explorer/subgraph/uniswap/uniswap-v2?selected=playground
-        query = """
-        {
-            pairs(
-                first: 1000,
-                where: {
-                    reserveUSD_lt: 900000,
-                    reserveUSD_gt: 50000,
-                },
-                orderBy: volumeUSD,
-                orderDirection: desc){
-                id
-                token0 {
-                  id
-                  name
-                  symbol
-                  decimals
-                }
-                token1 {
-                  id
-                  name
-                  symbol
-                  decimals
-                }
-            }
-        }
+        query = f"""
+            {{
+                pairs(
+                    first: 1000,
+                    where: {{
+                        reserveUSD_lt: {self.config.max_liquidity},
+                        reserveUSD_gt: {self.config.min_liquidity},
+                    }},
+                    orderBy: volumeUSD,
+                    orderDirection: desc){{
+                    id
+                    token0 {{
+                      id
+                      name
+                      symbol
+                      decimals
+                    }}
+                    token1 {{
+                      id
+                      name
+                      symbol
+                      decimals
+                    }}
+                }}
+            }}
         """
         url = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2'
         resp = requests.post(url, json={'query': query})
@@ -151,26 +153,27 @@ class PoolLoader:
 
     def _load_balancer_pools(self) -> List[Pool]:
         # https://thegraph.com/explorer/subgraph/balancer-labs/balancer
-        query = """
-        {
-            pools(
-                first: 1000,
-                where: {
-                    publicSwap: true,
-                    tokensCount:2,
-                    liquidity_lt: 900000,
-                    liquidity_gt: 50000,
-                },
-                orderBy: totalSwapVolume,
-                orderDirection: desc) {
-                id
-                tokens {
-                  address
-                  decimals
-                  symbol
-                }
-            }
-        }
+        query = f"""
+            {{
+                pools(
+                    first: 1000,
+                    where: {{
+                        publicSwap: true,
+                        tokensCount:2,
+                        liquidity_lt: {self.config.max_liquidity},
+                        liquidity_gt: {self.config.min_liquidity},
+                    }},
+                    orderBy: totalSwapVolume,
+                    orderDirection: desc
+                ) {{
+                    id
+                    tokens {{
+                      address
+                      decimals
+                      symbol
+                    }}
+                }}
+            }}
         """
         url = 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer'
         resp = requests.post(url, json={'query': query})

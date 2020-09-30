@@ -46,6 +46,14 @@ class Notification:
             json={"text": message},
         )
 
+    def send_snipe_noobs(self, message):
+        print(stylize(message, fg("light_blue")))
+        slack_webhook = self.config.get("SLACK_SNIPE_WEBHOOK")
+        requests.post(
+            slack_webhook,
+            json={"text": message},
+        )
+
     def send_slack_errors(self, message):
         slack_webhook = self.config.get("SLACK_ERRORS_WEBHOOK")
         message = ":red_circle:\n" + message
