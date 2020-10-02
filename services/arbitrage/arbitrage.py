@@ -156,6 +156,7 @@ class Arbitrage:
         return token_out, amount_out_wei
 
     def _init_all_exchange_contracts(self) -> Dict[str, ExchangeInterface]:
+        print("Init Exchange Contracts.")
         exchange_by_pool_address = {}
         for pool in self.pools:
             contract = self.ethereum.init_contract(pool)

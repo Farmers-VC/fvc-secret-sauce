@@ -19,40 +19,26 @@ class StrategyFresh:
     def __init__(
         self,
         ethereum: Ethereum,
+        arbitrage_service: Arbitrage,
         config: Config,
     ) -> None:
         self.ethereum = ethereum
         self.config = config
+        self.arbitrage_service = arbitrage_service
         self.pool_loader = PoolLoader(config=config)
         self.notification = Notification(self.config)
         self.printer = PrinterContract(self.ethereum, self.notification, self.config)
         self.arb_counter: Dict[str, int] = {}
 
-    def _load_recent_arbitrage_path(self) -> List[ArbitragePath]:
-        try:
-            print("Fetching fresh pools and finding new arbitrage paths")
-            pools = self.pool_loader.load_all_pools()
-            path_finder = PathFinder(pools, self.config)
-            arbitrage_paths = path_finder.find_all_paths()
-            self.arbitrage = Arbitrage(pools, self.ethereum, self.config)
-            print(
-                stylize(
-                    f"Found {len(pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
-                    fg("yellow"),
-                )
-            )
-        except Exception:
-            return self._load_recent_arbitrage_path()
-        return arbitrage_paths
+    def arbitrage_fresh_pools(self, arbitrage_paths):
 
-    def arbitrage_fresh_pools(self):
         current_block = self.ethereum.w3.eth.blockNumber
-        arbitrage_paths = self._load_recent_arbitrage_path()
         counter = 1
         while True:
             # Load again new pools Roughly every 40 minutes
             if counter % 200 == 0:
-                arbitrage_paths = self._load_recent_arbitrage_path()
+                return
+
             latest_block = wait_new_block(self.ethereum, current_block)
             start_time = time.time()
             current_block = latest_block
@@ -62,7 +48,7 @@ class StrategyFresh:
             except Exception:
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = int(gas_price * 1.5)
-            positive_arbitrages = self.arbitrage.calc_arbitrage(
+            positive_arbitrages = self.arbitrage_service.calc_arbitrage(
                 arbitrage_paths, latest_block, gas_price
             )
 
