@@ -17,8 +17,4 @@ class ExchangeFactory:
             return BalancerExchange(contract, debug)
         if contract_type == ContractTypeEnum.UNISWAP:
             return UniswapExchange(contract, debug)
-        if contract_type == ContractTypeEnum.SUSHISWAP:
-            return SushiSwapExchange(contract, debug)
-        if contract_type == ContractTypeEnum.BALANCER_PROXY:
-            return BalancerProxyExchange(contract, debug)
         raise Exception("Exchange not supported.")
