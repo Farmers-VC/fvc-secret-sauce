@@ -161,7 +161,7 @@ class PrinterContract:
         tx_hash: str = "",
         consecutive_arbs: int = None,
     ) -> None:
-        if consecutive_arbs is None or consecutive_arbs >= 2:
+        if self.config.strategy != "fresh" or consecutive_arbs >= 2:
             to_print = arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)
             if self.config.strategy == "snipe":
                 self.notification.send_snipe_noobs(to_print)

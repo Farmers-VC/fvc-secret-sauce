@@ -55,7 +55,6 @@ class StrategyScan:
             )
 
             for positive_arb in positive_arbitrages:
-                print(positive_arb.print(latest_block))
                 self.printer.arbitrage_on_chain(
                     positive_arb, latest_block, send_tx=False
                 )
