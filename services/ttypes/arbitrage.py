@@ -1,11 +1,13 @@
 from dataclasses import dataclass, field
-from typing import List, Set
+from typing import List
 
 from web3 import Web3
 
-from config import Config
+from config import Config, FIXED_TOKEN_PATH_SIZE, FIXED_ADDRESSES_PER_TOKEN_PATH
 from services.pools.pool import Pool
 from services.pools.token import Token
+from services.ttypes.contract import ContractTypeEnum
+from services.utils import mask_address, fill_zero_addresses
 
 config = Config()
 MAX_STEP_SUPPORTED = config.get_int("MAX_STEP_SUPPORTED")
@@ -41,23 +43,52 @@ class ArbitragePath:
         return False
 
     @property
-    def pool_and_token_addresses(self) -> Set[str]:
-        addresses: Set[str] = set()
-        for path in self.connecting_paths:
-            addresses.add(path.token_in.address)
-            addresses.add(path.token_out.address)
-            addresses.add(path.pool.address)
-        return addresses
-
-    @property
-    def pool_paths(self) -> List[str]:
-        return [
-            Web3.toChecksumAddress(path.pool.address) for path in self.connecting_paths
-        ]
-
-    @property
     def pool_types(self) -> List[int]:
-        return [path.pool.type.value for path in self.connecting_paths]
+        pool_types = []
+        for i, path in enumerate(self.connecting_paths):
+            if path.pool.type == ContractTypeEnum.BPOOL:
+                pool_types.append(ContractTypeEnum.BPOOL.value)
+            if path.pool.type == ContractTypeEnum.UNISWAP and (
+                i >= len(self.connecting_paths) - 1
+                or self.connecting_paths[i + 1] != ContractTypeEnum.UNISWAP
+            ):
+                pool_types.append(ContractTypeEnum.UNISWAP.value)
+            if path.pool.type == ContractTypeEnum.SUSHISWAP and (
+                i >= len(self.connecting_paths) - 1
+                or self.connecting_paths[i + 1] != ContractTypeEnum.SUSHISWAP
+            ):
+                # Sushiswap uses the same int value as Uniswap
+                pool_types.append(ContractTypeEnum.UNISWAP.value)
+        # Fill in with 8 that maps to nothing
+        pool_types = pool_types + [
+            8 for _ in range(FIXED_TOKEN_PATH_SIZE - len(pool_types))
+        ]
+        return pool_types
+
+    @property
+    def all_min_amount_out_wei_grouped(self) -> List[str]:
+        """Group min amounts per consecutive ContractTypeEnum (only take the last one)"""
+        all_min_amount_grouped = []
+        for i, path in enumerate(self.connecting_paths):
+            if path.pool.type == ContractTypeEnum.BPOOL:
+                all_min_amount_grouped.append(self.all_min_amount_out_wei[i])
+            if path.pool.type == ContractTypeEnum.UNISWAP and (
+                i >= len(self.connecting_paths) - 1
+                or self.connecting_paths[i + 1] != ContractTypeEnum.UNISWAP
+            ):
+                all_min_amount_grouped.append(self.all_min_amount_out_wei[i])
+            if path.pool.type == ContractTypeEnum.SUSHISWAP and (
+                i >= len(self.connecting_paths) - 1
+                or self.connecting_paths[i + 1] != ContractTypeEnum.SUSHISWAP
+            ):
+                # Sushiswap uses the same int value as Uniswap
+                all_min_amount_grouped.append(self.all_min_amount_out_wei[i])
+        # Fill in with 9999999999999000000000000000000 for useless min_amount
+        all_min_amount_grouped = all_min_amount_grouped + [
+            9999999999999000000000000000000
+            for _ in range(FIXED_TOKEN_PATH_SIZE - len(all_min_amount_grouped))
+        ]
+        return all_min_amount_grouped
 
     @property
     def token_out(self) -> Token:
@@ -68,13 +99,69 @@ class ArbitragePath:
         return self.gas_price * ESTIMATE_GAS_EXECUTION
 
     @property
+    def token_paths(self) -> List[List[str]]:
+        token_paths = []
+        uniswap_token_paths = []
+        sushiswap_token_paths = []
+        for i, path in enumerate(self.connecting_paths):
+            if path.pool.type == ContractTypeEnum.BPOOL:
+                bpool_path = fill_zero_addresses(
+                    [
+                        mask_address(self.pool.address),
+                        mask_address(self.token_in.address),
+                        mask_address(self.token_out.address),
+                    ],
+                    FIXED_ADDRESSES_PER_TOKEN_PATH - 3,
+                )
+                token_paths.append(bpool_path)
+            if path.pool.type == ContractTypeEnum.UNISWAP:
+                uniswap_token_paths.append(mask_address(path.token_in.address))
+                if (
+                    i >= (len(self.connecting_paths) - 1)
+                    or self.connecting_paths[i + 1].pool.type
+                    != ContractTypeEnum.UNISWAP
+                ):
+                    uniswap_token_paths.append(mask_address(path.token_out.address))
+                    num_tokens = len(uniswap_token_paths)
+                    # -2 because last item is total number of `num_tokens` and second to last is the Router addres
+                    uniswap_token_paths = fill_zero_addresses(
+                        uniswap_token_paths,
+                        FIXED_ADDRESSES_PER_TOKEN_PATH - num_tokens - 2,
+                    )
+                    uniswap_token_paths = uniswap_token_paths + [
+                        path.pool.router_address,
+                        f"0x000000000000000000000000000000000000000{num_tokens}",
+                    ]
+                    token_paths.append(uniswap_token_paths)
+                    uniswap_token_paths = []
+            if path.pool.type == ContractTypeEnum.SUSHISWAP:
+                sushiswap_token_paths.append(mask_address(path.token_in.address))
+                if (
+                    i >= (len(self.connecting_paths) - 1)
+                    or self.connecting_paths[i + 1].pool.type
+                    != ContractTypeEnum.SUSHISWAP
+                ):
+                    sushiswap_token_paths.append(mask_address(path.token_out.address))
+                    num_tokens = len(sushiswap_token_paths)
+                    sushiswap_token_paths = fill_zero_addresses(
+                        sushiswap_token_paths,
+                        FIXED_ADDRESSES_PER_TOKEN_PATH - num_tokens - 2,
+                    )
+                    sushiswap_token_paths = sushiswap_token_paths + [
+                        path.pool.router_address,
+                        f"0x000000000000000000000000000000000000000{num_tokens}",
+                    ]
+                    token_paths.append(sushiswap_token_paths)
+                    sushiswap_token_paths = []
+        token_paths = token_paths + [
+            fill_zero_addresses([], FIXED_ADDRESSES_PER_TOKEN_PATH)
+            for _ in range(FIXED_TOKEN_PATH_SIZE - len(token_paths))
+        ]
+        return token_paths
+
+    @property
     def tx_remix_str(self) -> str:
-        contract_path_input = []
-        contract_type_input = []
-        for path in self.connecting_paths:
-            contract_path_input.append(path.pool.address)
-            contract_type_input.append(str(path.pool.type.value))
-        return f"Remix String: {contract_path_input},{contract_type_input},{[str(item) for item in self.all_min_amount_out_wei]},{self.optimal_amount_in_wei},{self.gas_price_execution},{self.max_block_height}\n\n".replace(
+        return f"{self.token_paths},{self.all_min_amount_out_wei_grouped},{self.optimal_amount_in_wei},{self.gas_price_execution},{self.pool_types},{self.max_block_height}\n\n".replace(
             "'", '"'
         )
 

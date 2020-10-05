@@ -50,11 +50,11 @@ class PrinterContract:
         try:
             # Run estimateGas to see if the transaction would go through
             self.contract.functions.arbitrage(
-                arbitrage_path.pool_paths,
-                arbitrage_path.pool_types,
-                arbitrage_path.all_min_amount_out_wei,
+                arbitrage_path.token_paths,
+                arbitrage_path.all_min_amount_out_wei_grouped,
                 arbitrage_path.optimal_amount_in_wei,
                 arbitrage_path.gas_price_execution,
+                arbitrage_path.pool_types,
                 arbitrage_path.max_block_height,
             ).estimateGas({"from": self.executor_address})
             return True
@@ -93,11 +93,11 @@ class PrinterContract:
     ) -> str:
         """Helper function to build the transaction and signed it with priv key"""
         unsigned_tx = self.contract.functions.arbitrage(
-            arbitrage_path.pool_paths,
-            arbitrage_path.pool_types,
-            arbitrage_path.all_min_amount_out_wei,
+            arbitrage_path.token_paths,
+            arbitrage_path.all_min_amount_out_wei_grouped,
             arbitrage_path.optimal_amount_in_wei,
             arbitrage_path.gas_price_execution,
+            arbitrage_path.pool_types,
             arbitrage_path.max_block_height,
         ).buildTransaction(
             {
@@ -126,18 +126,8 @@ class PrinterContract:
         arbitrage_path: ArbitragePath,
     ) -> bool:
         token_out = arbitrage_path.token_out
-        paths = arbitrage_path.pool_paths
-        pool_types = arbitrage_path.pool_types
         if token_out.address != self.weth_address:
             self.notification.send_slack_errors("Last token out has to be WETH")
-            return False
-        if len(paths) != len(pool_types):
-            self.notification.send_slack_errors(
-                "Path and PoolType must be equal in length"
-            )
-            return False
-        if len(paths) > 3 or len(paths) <= 1:
-            self.notification.send_slack_errors("Path length has to be 2 or 3")
             return False
         if (
             arbitrage_path.gas_price_execution

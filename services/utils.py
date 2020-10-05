@@ -1,6 +1,9 @@
 import time
+from typing import List
 
 from services.ethereum.ethereum import Ethereum
+
+from config import MASK_ADDRESS
 
 
 def timer(method):
@@ -29,3 +32,12 @@ def wait_new_block(ethereum: Ethereum, current_block: int) -> int:
             )
             return latest_block["number"]
         time.sleep(0.5)
+
+
+def mask_address(address: str) -> str:
+    return hex(int(address, 16) ^ int(MASK_ADDRESS, 16))
+
+
+def fill_zero_addresses(token_paths: List[str], times: int) -> List[str]:
+    ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+    return token_paths + [ZERO_ADDRESS for _ in range(times)]
