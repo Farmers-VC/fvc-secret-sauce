@@ -9,7 +9,7 @@ from services.pools.token import Token
 from services.ttypes.contract import ContractTypeEnum
 from services.utils import mask_address, fill_zero_addresses
 
-config = Config()
+config = Config(strategy=None)
 MAX_STEP_SUPPORTED = config.get_int("MAX_STEP_SUPPORTED")
 ESTIMATE_GAS_EXECUTION = config.get_int("ESTIMATE_GAS_EXECUTION")
 
@@ -30,6 +30,7 @@ class ArbitragePath:
     gas_price: int = None
     max_arbitrage_amount_wei: int = None
     max_block_height: int = None
+    consecutive_arbs: int = 0
 
     @property
     def path_id(self) -> str:
@@ -165,9 +166,7 @@ class ArbitragePath:
             "'", '"'
         )
 
-    def print(
-        self, latest_block: int, tx_hash: str = "", consecutive_arbs: int = None
-    ) -> str:
+    def print(self, latest_block: int, tx_hash: str = "") -> str:
         paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name} ({self.connecting_paths[0].pool.type.name})"
         for idx, path in enumerate(self.connecting_paths):
             path_token_out = path.token_out
@@ -178,9 +177,9 @@ class ArbitragePath:
             arbitrage_result = (
                 arbitrage_result + f"Tx hash: https://etherscan.io/tx/{tx_hash}\n"
             )
-        if consecutive_arbs:
+        if self.consecutive_arbs:
             arbitrage_result = (
-                arbitrage_result + f"Consecutive Arbitrage: {consecutive_arbs}\n"
+                arbitrage_result + f"Consecutive Arbitrage: {self.consecutive_arbs}\n"
             )
 
         arbitrage_result = arbitrage_result + self.tx_remix_str

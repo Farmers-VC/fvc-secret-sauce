@@ -4,6 +4,7 @@ from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.pools.loader import PoolLoader
 from services.strategy.scan import StrategyScan
+from services.ttypes.strategy import StrategyEnum
 
 
 @click.command()
@@ -42,7 +43,7 @@ def scan(
     print("-----------------------------------------------------------")
 
     config = Config(
-        strategy="scan",
+        strategy=StrategyEnum.SCAN,
         kovan=kovan,
         debug=debug,
         send_tx=False,

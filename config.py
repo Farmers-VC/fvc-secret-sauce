@@ -1,6 +1,8 @@
 import os
 import os.path
 
+from services.ttypes.strategy import StrategyEnum
+
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Etherscan
@@ -20,7 +22,7 @@ FIXED_ADDRESSES_PER_TOKEN_PATH = 7
 
 # Arbitrage
 MAX_STEP_SUPPORTED = 3
-ESTIMATE_GAS_EXECUTION = 500000
+ESTIMATE_GAS_EXECUTION = 400000
 ESTIMATE_GAS_LIMIT = 1000000
 INCREMENTAL_STEP = 0.1
 
@@ -67,7 +69,7 @@ KOVAN_SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK = os.environ[
 class Config:
     def __init__(
         self,
-        strategy: str = "",
+        strategy: StrategyEnum,
         kovan: bool = False,
         debug: bool = False,
         send_tx: bool = False,
@@ -106,9 +108,9 @@ class Config:
     def get_max_block_allowed(self) -> int:
         if self.kovan:
             return 1000
-        if self.strategy == "snipe":
+        if self.strategy == StrategyEnum.SNIPE:
             return 2
-        if self.strategy == "scan":
-            return 3
-        if self.strategy == "fresh":
+        if self.strategy == StrategyEnum.SCAN:
+            return 2
+        if self.strategy == StrategyEnum.FRESH:
             return 2

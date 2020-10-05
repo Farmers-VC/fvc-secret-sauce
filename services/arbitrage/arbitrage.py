@@ -10,6 +10,8 @@ from services.exchange.iexchange import ExchangeInterface
 from services.pools.pool import Pool
 from services.pools.token import Token
 from services.ttypes.arbitrage import ArbitragePath
+from services.notifications.notifications import Notification
+from services.printer.printer import PrinterContract
 
 
 class Arbitrage:
@@ -22,26 +24,36 @@ class Arbitrage:
         self.weth_amount_in_wei = self.weth_token.to_wei(self.config.min_amount)
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
+        self.notification = Notification(self.config)
+        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
 
-    def calc_arbitrage(
+    def calc_arbitrage_and_print(
         self,
         arbitrage_paths: List[ArbitragePath],
         latest_block: int,
         gas_price: int,
         tx_hash: str = "",
-    ) -> List[ArbitragePath]:
+    ) -> None:
+        """Calculate Arbitrage opportunities for all paths
+        If we find a positive arbitrage, possibly call Printer smart contract
+        """
         max_block_allowed = self.config.get_max_block_allowed()
-        positive_arbitrages: List[ArbitragePath] = []
         for arbitrage_path in arbitrage_paths:
             arbitrage_path.gas_price = gas_price
+            arbitrage_path.max_block_height = latest_block + max_block_allowed
             try:
                 _, all_amount_outs_wei = self._calculate_single_path_arbitrage(
                     arbitrage_path, self.weth_amount_in_wei
                 )
-                optimal_arbitrage_path = self._analyze_arbitrage(
+                is_positive_arb = self._analyze_arbitrage(
                     all_amount_outs_wei,
                     arbitrage_path,
                 )
+
+                if is_positive_arb:
+                    self.printer.arbitrage_on_chain(arbitrage_path, latest_block)
+                else:
+                    arbitrage_path.consecutive_arbs = 0
             except Exception as e:
                 print(
                     stylize(
@@ -50,19 +62,6 @@ class Arbitrage:
                     )
                 )
                 continue
-
-            if optimal_arbitrage_path:
-                optimal_arbitrage_path.max_block_height = (
-                    latest_block + max_block_allowed
-                )
-                if (
-                    optimal_arbitrage_path.max_arbitrage_amount_wei
-                    > optimal_arbitrage_path.gas_price_execution
-                    + self.weth_token.to_wei(0.1)
-                ):
-
-                    positive_arbitrages.append(optimal_arbitrage_path)
-        return positive_arbitrages
 
     # @timer
     def _calculate_gas_price(self) -> int:
@@ -78,27 +77,33 @@ class Arbitrage:
         self,
         all_amount_outs_wei: List[int],
         arbitrage_path: ArbitragePath,
-    ) -> ArbitragePath:
+    ) -> bool:
         arbitrage_amount = (
             all_amount_outs_wei[-1]
             - self.weth_amount_in_wei
             - arbitrage_path.gas_price_execution
         )
+
         if arbitrage_amount + arbitrage_path.gas_price_execution > 0:
-            optimal_arbitrage = self._optimize_arbitrage_amount(
+            self._optimize_arbitrage_amount(
                 arbitrage_path,
                 arbitrage_amount,
             )
-            return optimal_arbitrage
+
+            if arbitrage_path.max_arbitrage_amount_wei > (
+                arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.05)
+            ):
+                return True
+            else:
+                return False
         else:
-            # print(f"Arbitrage Amount: {self.weth_token.from_wei(arbitrage_amount)} ETH")
-            return None
+            return False
 
     def _optimize_arbitrage_amount(
         self,
         arbitrage_path: ArbitragePath,
         arbitrage_amount_wei: int,
-    ) -> ArbitragePath:
+    ) -> None:
         """After finding an arbitrage opportunity, maximize the gain by changing the amount in"""
         max_arbitrage_amount_wei = arbitrage_amount_wei
         optimal_amount_in_wei = self.weth_amount_in_wei
@@ -131,8 +136,6 @@ class Arbitrage:
         arbitrage_path.max_arbitrage_amount_wei = max_arbitrage_amount_wei
         arbitrage_path.optimal_amount_in_wei = optimal_amount_in_wei
         arbitrage_path.all_optimal_amount_out_wei = all_optimal_amount_out_wei
-
-        return arbitrage_path
 
     def _calculate_single_path_arbitrage(
         self, arbitrage_path: ArbitragePath, amount_in_wei: int

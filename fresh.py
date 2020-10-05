@@ -3,6 +3,7 @@ import click
 from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.strategy.fresh import StrategyFresh
+from services.ttypes.strategy import StrategyEnum
 
 
 @click.command()
@@ -43,7 +44,7 @@ def fresh(
     print("-----------------------------------------------------------")
 
     config = Config(
-        strategy="fresh",
+        strategy=StrategyEnum.FRESH,
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,
