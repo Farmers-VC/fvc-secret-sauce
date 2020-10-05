@@ -105,10 +105,10 @@ class Config:
 
     def get_max_block_allowed(self) -> int:
         if self.kovan:
-            return 100
+            return 1000
         if self.strategy == "snipe":
             return 2
         if self.strategy == "scan":
             return 3
         if self.strategy == "fresh":
-            return 5
+            return 2

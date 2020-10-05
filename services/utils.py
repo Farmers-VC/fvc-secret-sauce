@@ -1,5 +1,6 @@
 import time
 from typing import List
+from web3 import Web3
 
 from services.ethereum.ethereum import Ethereum
 
@@ -35,7 +36,7 @@ def wait_new_block(ethereum: Ethereum, current_block: int) -> int:
 
 
 def mask_address(address: str) -> str:
-    return hex(int(address, 16) ^ int(MASK_ADDRESS, 16))
+    return Web3.toChecksumAddress(hex(int(address, 16) ^ int(MASK_ADDRESS, 16)))
 
 
 def fill_zero_addresses(token_paths: List[str], times: int) -> List[str]:

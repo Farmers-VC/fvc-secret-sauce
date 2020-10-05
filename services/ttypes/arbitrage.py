@@ -50,12 +50,12 @@ class ArbitragePath:
                 pool_types.append(ContractTypeEnum.BPOOL.value)
             if path.pool.type == ContractTypeEnum.UNISWAP and (
                 i >= len(self.connecting_paths) - 1
-                or self.connecting_paths[i + 1] != ContractTypeEnum.UNISWAP
+                or self.connecting_paths[i + 1].pool.type != ContractTypeEnum.UNISWAP
             ):
                 pool_types.append(ContractTypeEnum.UNISWAP.value)
             if path.pool.type == ContractTypeEnum.SUSHISWAP and (
                 i >= len(self.connecting_paths) - 1
-                or self.connecting_paths[i + 1] != ContractTypeEnum.SUSHISWAP
+                or self.connecting_paths[i + 1].pool.type != ContractTypeEnum.SUSHISWAP
             ):
                 # Sushiswap uses the same int value as Uniswap
                 pool_types.append(ContractTypeEnum.UNISWAP.value)
@@ -74,12 +74,12 @@ class ArbitragePath:
                 all_min_amount_grouped.append(self.all_min_amount_out_wei[i])
             if path.pool.type == ContractTypeEnum.UNISWAP and (
                 i >= len(self.connecting_paths) - 1
-                or self.connecting_paths[i + 1] != ContractTypeEnum.UNISWAP
+                or self.connecting_paths[i + 1].pool.type != ContractTypeEnum.UNISWAP
             ):
                 all_min_amount_grouped.append(self.all_min_amount_out_wei[i])
             if path.pool.type == ContractTypeEnum.SUSHISWAP and (
                 i >= len(self.connecting_paths) - 1
-                or self.connecting_paths[i + 1] != ContractTypeEnum.SUSHISWAP
+                or self.connecting_paths[i + 1].pool.type != ContractTypeEnum.SUSHISWAP
             ):
                 # Sushiswap uses the same int value as Uniswap
                 all_min_amount_grouped.append(self.all_min_amount_out_wei[i])
@@ -107,9 +107,9 @@ class ArbitragePath:
             if path.pool.type == ContractTypeEnum.BPOOL:
                 bpool_path = fill_zero_addresses(
                     [
-                        mask_address(self.pool.address),
-                        mask_address(self.token_in.address),
-                        mask_address(self.token_out.address),
+                        mask_address(path.pool.address),
+                        mask_address(path.token_in.address),
+                        mask_address(path.token_out.address),
                     ],
                     FIXED_ADDRESSES_PER_TOKEN_PATH - 3,
                 )
