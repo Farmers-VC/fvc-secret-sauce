@@ -10,7 +10,7 @@ from services.ethereum.ethereum import Ethereum
 from services.path.path import PathFinder
 from services.pools.pool import Pool
 from services.ttypes.arbitrage import ArbitragePath
-from services.utils import wait_new_block
+from services.utils import wait_new_block, calculate_gas_price
 
 
 class StrategyScan:
@@ -42,8 +42,9 @@ class StrategyScan:
             start_time = time.time()
 
             try:
-                gas_price = self._calculate_gas_price()
+                gas_price = calculate_gas_price(self.ethereum, self.config)
             except Exception:
+                print("Could not calculate gas price")
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = int(gas_price * 1.5)
             self.arbitrage.calc_arbitrage_and_print(

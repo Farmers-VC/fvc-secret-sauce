@@ -63,16 +63,6 @@ class Arbitrage:
                 )
                 continue
 
-    # @timer
-    def _calculate_gas_price(self) -> int:
-        """Calculate the current gas price based on fast with high probability strategy"""
-        gas_price = self.ethereum.w3.eth.generateGasPrice()
-        if self.config.debug:
-            print(f"Gas Price = {self.ethereum.w3.fromWei(gas_price, 'gwei')} Gwei")
-        return gas_price
-
-        # @timer
-
     def _analyze_arbitrage(
         self,
         all_amount_outs_wei: List[int],

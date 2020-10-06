@@ -3,8 +3,7 @@ from typing import List
 from web3 import Web3
 
 from services.ethereum.ethereum import Ethereum
-
-from config import MASK_ADDRESS
+from config import Config, MASK_ADDRESS
 
 
 def timer(method):
@@ -42,3 +41,11 @@ def mask_address(address: str) -> str:
 def fill_zero_addresses(token_paths: List[str], times: int) -> List[str]:
     ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
     return token_paths + [ZERO_ADDRESS for _ in range(times)]
+
+
+def calculate_gas_price(ethereum: Ethereum, config: Config) -> int:
+    """Calculate the current gas price based on fast with high probability strategy"""
+    gas_price = ethereum.w3.eth.generateGasPrice()
+    if config.debug:
+        print(f"Gas Price = {ethereum.w3.fromWei(gas_price, 'gwei')} Gwei")
+    return gas_price
