@@ -9,6 +9,7 @@ from services.ethereum.ethereum import Ethereum
 from services.pools.loader import PoolLoader
 from services.strategy.snipe import StrategySnipe
 from services.ttypes.sniper import SnipingNoob
+from services.ttypes.strategy import StrategyEnum
 
 
 @click.command()
@@ -35,7 +36,7 @@ def snipe(
     address: str,
 ) -> None:
     config = Config(
-        strategy="snipe",
+        strategy=StrategyEnum.SNIPE,
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,

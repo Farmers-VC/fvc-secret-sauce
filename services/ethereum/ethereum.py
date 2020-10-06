@@ -39,11 +39,7 @@ class Ethereum:
     def _get_abi_by_contract_type(self, contract_type: ContractTypeEnum) -> str:
         if contract_type == ContractTypeEnum.BPOOL:
             json_file = "bpool_abi.json"
-        if contract_type == ContractTypeEnum.BALANCER_PROXY:
-            json_file = "balancer_proxy_abi.json"
         if contract_type == ContractTypeEnum.UNISWAP:
-            json_file = "uniswap_pair_abi.json"
-        if contract_type == ContractTypeEnum.SUSHISWAP:
             json_file = "uniswap_pair_abi.json"
         with open(os.path.join(self.config.get("ABI_PATH"), json_file)) as f:
             contract_abi = json.load(f)
@@ -57,7 +53,7 @@ class Ethereum:
         return contract_abi
 
     def init_printer_contract(self) -> Contract:
-        json_file = "proxy_arbitrage_abi.json"
+        json_file = "printer_abi.json"
         printer_address = self.config.get("PRINTER_ADDRESS")
         with open(os.path.join(self.config.get("ABI_PATH"), json_file)) as f:
             contract_abi = json.load(f)

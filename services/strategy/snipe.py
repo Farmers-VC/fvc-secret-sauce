@@ -4,10 +4,8 @@ from typing import List, Set
 from config import Config
 from services.arbitrage.arbitrage import Arbitrage
 from services.ethereum.ethereum import Ethereum
-from services.notifications.notifications import Notification
 from services.path.path import PathFinder
 from services.pools.pool import Pool
-from services.printer.printer import PrinterContract
 from services.ttypes.arbitrage import ArbitragePath
 from services.ttypes.sniper import SnipingArbitrage, SnipingNoob
 
@@ -23,8 +21,6 @@ class StrategySnipe:
         self.pools_by_address = {pool.address: pool for pool in pools}
         self.noobs = noobs
         self.arbitrage = Arbitrage(pools, self.ethereum, self.config)
-        self.notification = Notification(self.config)
-        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
         self.last_txs: List[str] = []
 
     def snipe_arbitrageur(self) -> None:
@@ -39,25 +35,12 @@ class StrategySnipe:
                     print(
                         f"[Pending Tx: {sniping_arbitrage.tx_hash}] Found {len(arbitrage_paths)} paths"
                     )
-                positive_arbitrages = self.arbitrage.calc_arbitrage(
+                self.arbitrage.calc_arbitrage_and_print(
                     arbitrage_paths,
                     latest_block,
                     sniping_arbitrage.gas_price + 1,
                     sniping_arbitrage.tx_hash,
                 )
-
-                for positive_arb in positive_arbitrages:
-                    self.printer.arbitrage_on_chain(
-                        positive_arb,
-                        latest_block,
-                        tx_hash=sniping_arbitrage.tx_hash,
-                        send_tx=self.config.send_tx,
-                    )
-            # gas_price = sniping_arbitrages[-1].gas_price if sniping_arbitrages else 0
-            # print(
-            #     f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
-            #     % (time.time() - start_time)
-            # )
 
     def _scan_mempool_and_snipe(self) -> List[SnipingArbitrage]:
         """

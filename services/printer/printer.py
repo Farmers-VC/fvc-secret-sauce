@@ -5,6 +5,7 @@ from config import Config
 from services.ethereum.ethereum import Ethereum
 from services.notifications.notifications import Notification
 from services.ttypes.arbitrage import ArbitragePath
+from services.ttypes.strategy import StrategyEnum
 
 
 class PrinterContract:
@@ -23,48 +24,50 @@ class PrinterContract:
         arbitrage_path: ArbitragePath,
         latest_block: int,
         tx_hash: str = "",
-        send_tx: bool = False,
-        consecutive_arbs: int = None,
-    ) -> bool:
+    ) -> None:
         """Return True if arbitrage is/would have been successful on-chain, False otherwise"""
         if self._safety_send(arbitrage_path) and self._validate_transactions(
             arbitrage_path
         ):
-            self._display_arbitrage(
-                arbitrage_path, latest_block, tx_hash, consecutive_arbs
-            )
-            if send_tx:
-                return self._send_transaction_on_chain(arbitrage_path)
-            return True
+            self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
+            if self.config.send_tx:
+                self._send_transaction_on_chain(arbitrage_path)
         else:
             print(
                 stylize(
-                    f"Estimate Gas Failed {arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)}",
+                    f"Estimate Gas Failed {arbitrage_path.print(latest_block, tx_hash)}",
                     fg("light_red"),
                 )
             )
-            return False
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
         """This function will simulate sending the transaction on-chain and let us know if it would go through"""
         try:
             # Run estimateGas to see if the transaction would go through
             self.contract.functions.arbitrage(
-                arbitrage_path.pool_paths,
-                arbitrage_path.pool_types,
-                arbitrage_path.all_min_amount_out_wei,
+                arbitrage_path.token_paths,
+                arbitrage_path.all_min_amount_out_wei_grouped,
                 arbitrage_path.optimal_amount_in_wei,
                 arbitrage_path.gas_price_execution,
+                arbitrage_path.pool_types,
                 arbitrage_path.max_block_height,
             ).estimateGas({"from": self.executor_address})
+            arbitrage_path.consecutive_arbs += 1
             return True
         except Exception as e:
             print(f"This transaction would not go through: {str(e)}")
+            arbitrage_path.consecutive_arbs = 0
             return False
 
-    def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> bool:
+    def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
         """Trigger the arbitrage transaction on-chain"""
+        if (
+            self.config.strategy == StrategyEnum.FRESH
+            and arbitrage_path.consecutive_arbs < 2
+        ):
+            return
         try:
+            arbitrage_path.consecutive_arbs = 0
             tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
             receipt = self.ethereum.w3.eth.waitForTransactionReceipt(tx_hash)
             etherscan_url = (
@@ -76,7 +79,6 @@ class PrinterContract:
             if receipt["status"] == 1:
                 self.notification.send_slack_printing_tx(tx_hash_url, success=True)
                 self.notification.send_twilio(f"Brrrrrr: {tx_hash_url}")
-                return True
             else:
                 self.notification.send_slack_printing_tx(tx_hash_url, success=False)
         except TimeExhausted as e:
@@ -85,7 +87,6 @@ class PrinterContract:
             )
         except Exception as e:
             self.notification.send_slack_errors(f"Exception: {str(e)}")
-        return False
 
     def _building_tx_and_signing_and_send(
         self,
@@ -93,11 +94,11 @@ class PrinterContract:
     ) -> str:
         """Helper function to build the transaction and signed it with priv key"""
         unsigned_tx = self.contract.functions.arbitrage(
-            arbitrage_path.pool_paths,
-            arbitrage_path.pool_types,
-            arbitrage_path.all_min_amount_out_wei,
+            arbitrage_path.token_paths,
+            arbitrage_path.all_min_amount_out_wei_grouped,
             arbitrage_path.optimal_amount_in_wei,
             arbitrage_path.gas_price_execution,
+            arbitrage_path.pool_types,
             arbitrage_path.max_block_height,
         ).buildTransaction(
             {
@@ -126,18 +127,8 @@ class PrinterContract:
         arbitrage_path: ArbitragePath,
     ) -> bool:
         token_out = arbitrage_path.token_out
-        paths = arbitrage_path.pool_paths
-        pool_types = arbitrage_path.pool_types
         if token_out.address != self.weth_address:
             self.notification.send_slack_errors("Last token out has to be WETH")
-            return False
-        if len(paths) != len(pool_types):
-            self.notification.send_slack_errors(
-                "Path and PoolType must be equal in length"
-            )
-            return False
-        if len(paths) > 3 or len(paths) <= 1:
-            self.notification.send_slack_errors("Path length has to be 2 or 3")
             return False
         if (
             arbitrage_path.gas_price_execution
@@ -159,11 +150,13 @@ class PrinterContract:
         arbitrage_path: ArbitragePath,
         latest_block: int,
         tx_hash: str = "",
-        consecutive_arbs: int = None,
     ) -> None:
-        if consecutive_arbs is None or consecutive_arbs >= 2:
-            to_print = arbitrage_path.print(latest_block, tx_hash, consecutive_arbs)
-            if self.config.strategy == "snipe":
+        if (
+            self.config.strategy != StrategyEnum.FRESH
+            or arbitrage_path.consecutive_arbs >= 2
+        ):
+            to_print = arbitrage_path.print(latest_block, tx_hash)
+            if self.config.strategy == StrategyEnum.SNIPE:
                 self.notification.send_snipe_noobs(to_print)
             else:
                 self.notification.send_slack_arbitrage(to_print)

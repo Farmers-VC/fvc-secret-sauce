@@ -1,21 +1,37 @@
 [
 	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "_active",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"constant": false,
 		"inputs": [
 			{
-				"internalType": "address[]",
-				"name": "path",
-				"type": "address[]"
+				"internalType": "address[7][3]",
+				"name": "tokenPaths",
+				"type": "address[7][3]"
 			},
 			{
-				"internalType": "enum Printer.PoolType[]",
-				"name": "poolType",
-				"type": "uint8[]"
-			},
-			{
-				"internalType": "uint256[]",
+				"internalType": "uint256[3]",
 				"name": "minAmountOuts",
-				"type": "uint256[]"
+				"type": "uint256[3]"
 			},
 			{
 				"internalType": "uint256",
@@ -28,12 +44,37 @@
 				"type": "uint256"
 			},
 			{
-				"internalType": "uint256",
+				"internalType": "uint8[3]",
+				"name": "poolType",
+				"type": "uint8[3]"
+			},
+			{
+				"internalType": "uint64",
 				"name": "maxBlockNumber",
-				"type": "uint256"
+				"type": "uint64"
 			}
 		],
 		"name": "arbitrage",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "executor",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"name": "setExecutor",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -47,12 +88,6 @@
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"inputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "constructor"
 	},
 	{
 		"constant": false,
@@ -81,21 +116,6 @@
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "_active",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
 		"type": "function"
 	}
 ]
