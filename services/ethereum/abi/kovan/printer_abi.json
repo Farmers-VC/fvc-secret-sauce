@@ -61,6 +61,15 @@
 		"type": "function"
 	},
 	{
+			"constant": false,
+			"inputs": [],
+			"name": "fake",
+			"outputs": [],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+	},
+	{
 		"constant": false,
 		"inputs": [
 			{
