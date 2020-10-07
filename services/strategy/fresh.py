@@ -1,3 +1,4 @@
+import asyncio
 import time
 from typing import List
 
@@ -36,18 +37,43 @@ class StrategyFresh:
                     fg("yellow"),
                 )
             )
-        except Exception:
+        except Exception as e:
+            print("FUCK!", str(e))
             return self._load_recent_arbitrage_path()
         return arbitrage_paths
 
+    # def arbitrage_fresh_pools(self):
+    #     loop = asyncio.get_event_loop()
+    #     loop.create_task(self.task(1))
+    #     loop.create_task(self.task(2))
+
+    #     loop.run_forever()
+    #     loop.close()
+
+    # async def task(self, thread):
+    #     while True:
+    #         current_block = self.ethereum.w3.eth.blockNumber
+    #         print("TASK!", thread, current_block)
+    #         await asyncio.sleep(1)
+
     def arbitrage_fresh_pools(self):
+        loop = asyncio.get_event_loop()
+
         current_block = self.ethereum.w3.eth.blockNumber
-        arbitrage_paths = self._load_recent_arbitrage_path()
         counter = 1
+        breakpoint()
         while True:
-            # Load again new pools Roughly every 40 minutes
-            if counter % 200 == 0:
-                arbitrage_paths = self._load_recent_arbitrage_path()
+            arbitrage_paths = self._load_recent_arbitrage_path()
+            breakpoint()
+            for index, chunk in enumerate(self._chunk(arbitrage_paths, 200)):
+                print("START LOOP", index)
+                loop.create_task(self.task(index, chunk))
+        loop.run_forever()
+        loop.close()
+
+    async def task(self, thread, paths):
+        print("STARTING THREAD: ", thread)
+        while counter < 200:
             latest_block = wait_new_block(self.ethereum, current_block)
             start_time = time.time()
             current_block = latest_block
@@ -59,7 +85,7 @@ class StrategyFresh:
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = int(gas_price * 1.5)
             self.arbitrage.calc_arbitrage_and_print(
-                arbitrage_paths, latest_block, gas_price
+                paths, latest_block, gas_price
             )
 
             counter += 1
@@ -67,3 +93,7 @@ class StrategyFresh:
                 f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
                 % (time.time() - start_time)
             )
+
+    def _chunk(paths, num_per_chunk):
+        for i in range(0, len(paths), num_per_chunk):
+            yield paths[i : i + num_per_chunk]
