@@ -26,9 +26,9 @@ class PrinterContract:
         tx_hash: str = "",
     ) -> None:
         """Return True if arbitrage is/would have been successful on-chain, False otherwise"""
-        if self._safety_send(
-            arbitrage_path, latest_block
-        ) and self._validate_transactions(arbitrage_path):
+        if self._safety_send(arbitrage_path) and self._validate_transactions(
+            arbitrage_path
+        ):
             self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
             if self.config.send_tx:
                 self._send_transaction_on_chain(arbitrage_path)
@@ -40,7 +40,7 @@ class PrinterContract:
                 )
             )
 
-    def _safety_send(self, arbitrage_path: ArbitragePath, latest_block: int) -> bool:
+    def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
         """This function will simulate sending the transaction on-chain and let us know if it would go through"""
         try:
             # Run estimateGas to see if the transaction would go through
