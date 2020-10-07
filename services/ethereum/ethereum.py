@@ -39,7 +39,10 @@ class Ethereum:
     def _get_abi_by_contract_type(self, contract_type: ContractTypeEnum) -> str:
         if contract_type == ContractTypeEnum.BPOOL:
             json_file = "bpool_abi.json"
-        if contract_type == ContractTypeEnum.UNISWAP:
+        if (
+            contract_type == ContractTypeEnum.UNISWAP
+            or contract_type == ContractTypeEnum.SUSHISWAP
+        ):
             json_file = "uniswap_pair_abi.json"
         with open(os.path.join(self.config.get("ABI_PATH"), json_file)) as f:
             contract_abi = json.load(f)

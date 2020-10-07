@@ -109,8 +109,8 @@ class Config:
         if self.kovan:
             return 1000
         if self.strategy == StrategyEnum.SNIPE:
-            return 2
+            return 3
         if self.strategy == StrategyEnum.SCAN:
-            return 2
+            return 3
         if self.strategy == StrategyEnum.FRESH:
-            return 2
+            return 3

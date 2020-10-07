@@ -19,7 +19,7 @@ class PoolLoader:
 
         uniswap_pools = self._load_uniswap_pools()
         balancer_pools = self._load_balancer_pools()
-        sushiswap_pools = self._load_sushiswap_pools()
+        sushiswap_pools = []  # self._load_sushiswap_pools()
 
         yaml_pools = self._load_pools_yaml()
         pools_without_blacklist = self._filter_blacklist_pools(
@@ -102,27 +102,27 @@ class PoolLoader:
 
     def _load_sushiswap_pools(self) -> List[Pool]:
         # https://thegraph.com/explorer/subgraph/dmihal/sushiswap
-        query = """
-        {
+        query = f"""
+        {{
             pairs(
                 first: 1000,
                 orderBy: volumeUSD,
-                orderDirection: desc){
+                orderDirection: desc){{
                 id
-                token0 {
+                token0 {{
                   id
                   name
                   symbol
                   decimals
-                }
-                token1 {
+                }}
+                token1 {{
                   id
                   name
                   symbol
                   decimals
-                }
-            }
-        }
+                }}
+            }}
+        }}
         """
         url = "https://api.thegraph.com/subgraphs/name/dmihal/sushiswap"
         resp = requests.post(url, json={"query": query})

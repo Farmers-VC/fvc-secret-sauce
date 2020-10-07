@@ -38,7 +38,12 @@ class StrategyFresh:
                 )
             )
         except Exception as e:
-            print("FUCK!", str(e))
+            print(
+                stylize(
+                    f"Exception loading arbitrage path: {str(e)}",
+                    fg("red"),
+                )
+            )
             return self._load_recent_arbitrage_path()
         return arbitrage_paths
 
@@ -80,8 +85,13 @@ class StrategyFresh:
 
             try:
                 gas_price = calculate_gas_price(self.ethereum, self.config)
-            except Exception:
-                print("Could not calculate gas price")
+            except Exception as e:
+                print(
+                    stylize(
+                        f"Could not calculate gas price {str(e)}",
+                        fg("red"),
+                    )
+                )
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = int(gas_price * 1.5)
             self.arbitrage.calc_arbitrage_and_print(
