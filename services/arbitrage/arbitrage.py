@@ -15,7 +15,13 @@ from services.printer.printer import PrinterContract
 
 
 class Arbitrage:
-    def __init__(self, pools: List[Pool], ethereum: Ethereum, config: Config) -> None:
+    def __init__(
+        self,
+        pools: List[Pool],
+        ethereum: Ethereum,
+        config: Config,
+        consecutive: int = 2,
+    ) -> None:
         self.pools = pools
         self.ethereum = ethereum
         self.config = config
@@ -25,7 +31,9 @@ class Arbitrage:
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
         self.notification = Notification(self.config)
-        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
+        self.printer = PrinterContract(
+            self.ethereum, self.notification, self.config, consecutive=consecutive
+        )
 
     def calc_arbitrage_and_print(
         self,

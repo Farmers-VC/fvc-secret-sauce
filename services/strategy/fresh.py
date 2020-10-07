@@ -16,9 +16,11 @@ from services.utils import wait_new_block, calculate_gas_price
 class StrategyFresh:
     def __init__(
         self,
+        consecutive: int,
         ethereum: Ethereum,
         config: Config,
     ) -> None:
+        self.consecutive = consecutive
         self.ethereum = ethereum
         self.config = config
         self.pool_loader = PoolLoader(config=config)
@@ -29,7 +31,9 @@ class StrategyFresh:
             pools = self.pool_loader.load_all_pools()
             path_finder = PathFinder(pools, self.config)
             arbitrage_paths = path_finder.find_all_paths()
-            self.arbitrage = Arbitrage(pools, self.ethereum, self.config)
+            self.arbitrage = Arbitrage(
+                pools, self.ethereum, self.config, consecutive=self.consecutive
+            )
             print(
                 stylize(
                     f"Found {len(pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
@@ -68,7 +72,7 @@ class StrategyFresh:
                     )
                 )
                 gas_price = self.ethereum.w3.eth.gasPrice
-            gas_price = int(gas_price * 1.5)
+            gas_price = int(gas_price * self.config.gas_multiplier)
             self.arbitrage.calc_arbitrage_and_print(
                 arbitrage_paths, latest_block, gas_price
             )

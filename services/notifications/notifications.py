@@ -39,7 +39,7 @@ class Notification:
         )
 
     def send_slack_arbitrage(self, message):
-        print(stylize(message, fg("light_blue")))
+        # print(stylize(message, fg("light_blue")))
         slack_webhook = self.config.get("SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK")
         requests.post(
             slack_webhook,

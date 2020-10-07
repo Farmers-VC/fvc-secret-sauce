@@ -10,7 +10,11 @@ from services.ttypes.strategy import StrategyEnum
 
 class PrinterContract:
     def __init__(
-        self, ethereum: Ethereum, notification: Notification, config: Config
+        self,
+        ethereum: Ethereum,
+        notification: Notification,
+        config: Config,
+        consecutive: int = 2,
     ) -> None:
         self.ethereum = ethereum
         self.contract = ethereum.init_printer_contract()
@@ -18,6 +22,7 @@ class PrinterContract:
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.notification = notification
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
+        self.consecutive = consecutive
 
     def arbitrage_on_chain(
         self,
@@ -63,7 +68,7 @@ class PrinterContract:
         """Trigger the arbitrage transaction on-chain"""
         if (
             self.config.strategy == StrategyEnum.FRESH
-            and arbitrage_path.consecutive_arbs < 2
+            and arbitrage_path.consecutive_arbs < self.consecutive
         ):
             return
         try:
@@ -151,11 +156,12 @@ class PrinterContract:
         latest_block: int,
         tx_hash: str = "",
     ) -> None:
+        to_print = arbitrage_path.print(latest_block, tx_hash)
+        print(stylize(to_print, fg("light_blue")))
         if (
             self.config.strategy != StrategyEnum.FRESH
-            or arbitrage_path.consecutive_arbs >= 2
+            or arbitrage_path.consecutive_arbs >= self.consecutive
         ):
-            to_print = arbitrage_path.print(latest_block, tx_hash)
             if self.config.strategy == StrategyEnum.SNIPE:
                 self.notification.send_snipe_noobs(to_print)
             else:
