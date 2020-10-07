@@ -1,4 +1,6 @@
 import asyncio
+import aiohttp
+
 import time
 from typing import List
 
@@ -24,6 +26,69 @@ class StrategyFresh:
         self.config = config
         self.pool_loader = PoolLoader(config=config)
 
+
+    def arbitrage_fresh_pools(self):
+        breakpoint()
+        while True:
+            arbitrage_paths = self._load_recent_arbitrage_path()
+            print("FOUND PATHS:", len(arbitrage_paths))
+
+            asyncio.run(self._queue_tasks(arbitrage_paths))
+
+
+    async def _queue_tasks(self, arbitrage_paths):
+        print("QUEUE TASKS")
+        async with aiohttp.ClientSession() as session:
+            coroutines = [self._task(index, chunk) for index, chunk in enumerate(self._chunk(arbitrage_paths, 10))]
+            pending_tasks = set(
+                [asyncio.create_task(coro) for coro in coroutines]
+            )
+        while pending_tasks:
+            done_tasks, pending_tasks = await asyncio.wait(pending_tasks,  return_when=asyncio.ALL_COMPLETED)
+        print("ALL TASKS COMPLETED")
+
+    async def _task(self, thread, paths):
+        print("STARTING THREAD: ", thread)
+
+        counter = 1
+        current_block = await self.ethereum.w3.eth.blockNumber
+
+
+        while counter < 200:
+            print("COUNTER", thread, counter)
+            latest_block = wait_new_block(self.ethereum, current_block)
+            start_time = time.time()
+            current_block = latest_block
+
+            try:
+                gas_price = calculate_gas_price(self.ethereum, self.config)
+            except Exception as e:
+                print(
+                    stylize(
+                        f"Could not calculate gas price {str(e)}",
+                        fg("red"),
+                    )
+                )
+                gas_price = self.ethereum.w3.eth.gasPrice
+            gas_price = int(gas_price * 1.5)
+
+            self.arbitrage.calc_arbitrage_and_print(
+                paths, latest_block, gas_price
+            )
+
+            counter += 1
+            print(
+                f"{thread}--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
+                % (time.time() - start_time)
+            )
+            await asyncio.sleep(0.01)
+
+
+    def _chunk(self, paths, num_per_chunk):
+        for i in range(0, len(paths), num_per_chunk):
+            yield paths[i : i + num_per_chunk]
+
+
     def _load_recent_arbitrage_path(self) -> List[ArbitragePath]:
         try:
             print("Fetching fresh pools and finding new arbitrage paths")
@@ -46,64 +111,3 @@ class StrategyFresh:
             )
             return self._load_recent_arbitrage_path()
         return arbitrage_paths
-
-    # def arbitrage_fresh_pools(self):
-    #     loop = asyncio.get_event_loop()
-    #     loop.create_task(self.task(1))
-    #     loop.create_task(self.task(2))
-
-    #     loop.run_forever()
-    #     loop.close()
-
-    # async def task(self, thread):
-    #     while True:
-    #         current_block = self.ethereum.w3.eth.blockNumber
-    #         print("TASK!", thread, current_block)
-    #         await asyncio.sleep(1)
-
-    def arbitrage_fresh_pools(self):
-        loop = asyncio.get_event_loop()
-
-        current_block = self.ethereum.w3.eth.blockNumber
-        counter = 1
-        breakpoint()
-        while True:
-            arbitrage_paths = self._load_recent_arbitrage_path()
-            breakpoint()
-            for index, chunk in enumerate(self._chunk(arbitrage_paths, 200)):
-                print("START LOOP", index)
-                loop.create_task(self.task(index, chunk))
-        loop.run_forever()
-        loop.close()
-
-    async def task(self, thread, paths):
-        print("STARTING THREAD: ", thread)
-        while counter < 200:
-            latest_block = wait_new_block(self.ethereum, current_block)
-            start_time = time.time()
-            current_block = latest_block
-
-            try:
-                gas_price = calculate_gas_price(self.ethereum, self.config)
-            except Exception as e:
-                print(
-                    stylize(
-                        f"Could not calculate gas price {str(e)}",
-                        fg("red"),
-                    )
-                )
-                gas_price = self.ethereum.w3.eth.gasPrice
-            gas_price = int(gas_price * 1.5)
-            self.arbitrage.calc_arbitrage_and_print(
-                paths, latest_block, gas_price
-            )
-
-            counter += 1
-            print(
-                f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
-                % (time.time() - start_time)
-            )
-
-    def _chunk(paths, num_per_chunk):
-        for i in range(0, len(paths), num_per_chunk):
-            yield paths[i : i + num_per_chunk]
