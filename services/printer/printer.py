@@ -46,20 +46,6 @@ class PrinterContract:
             # Run estimateGas to see if the transaction would go through
             self.contract.functions.arbitrage(
                 arbitrage_path.token_paths,
-                [0, 0, 0],
-                arbitrage_path.optimal_amount_in_wei,
-                arbitrage_path.gas_price_execution,
-                arbitrage_path.pool_types,
-                arbitrage_path.max_block_height,
-            ).estimateGas({"from": self.executor_address})
-            print(
-                stylize(
-                    arbitrage_path.print(latest_block, ""),
-                    fg("green"),
-                )
-            )
-            self.contract.functions.arbitrage(
-                arbitrage_path.token_paths,
                 arbitrage_path.all_min_amount_out_wei_grouped,
                 arbitrage_path.optimal_amount_in_wei,
                 arbitrage_path.gas_price_execution,
