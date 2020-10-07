@@ -22,12 +22,12 @@ from services.ttypes.strategy import StrategyEnum
 )
 @click.option(
     "--min-liquidity",
-    default=50000,
+    default=10000,
     help="Set minimum liquidity (Default: 30,000)",
 )
 @click.option(
     "--max-liquidity",
-    default=500000,
+    default=50000000,
     help="Set max liquidity (Default: 500,000)",
 )
 def scan(
