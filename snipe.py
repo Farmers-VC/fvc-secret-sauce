@@ -25,29 +25,59 @@ from services.ttypes.strategy import StrategyEnum
     default=3.0,
     help="Set min Amount to trade with in WETH (Default: 3.0)",
 )
+@click.option(
+    "--min-liquidity",
+    default=20000,
+    help="Set minimum liquidity (Default: 30,000)",
+)
+@click.option(
+    "--max-liquidity",
+    default=10000000000,
+    help="Set max liquidity (Default: 500,000)",
+)
 @click.option("--send-tx", is_flag=True, help="Send the transaction on-chain")
+@click.option(
+    "--gas-multiplier",
+    default=1.5,
+    help="Set gas price multipler (Default: 1.5)",
+)
+@click.option(
+    "--max-block",
+    default=3,
+    help="Set max number of block we allow the transaction to go through (Default: 3)",
+)
 @click.option("--address", help="Specify a specific arbitrageur address to snipe")
 def snipe(
     kovan: bool,
     debug: bool,
     max_amount: float,
     min_amount: float,
+    min_liquidity: int,
+    max_liquidity: int,
     send_tx: bool,
     address: str,
+    gas_multiplier: float,
+    max_block: int,
 ) -> None:
+    print("-----------------------------------------------------------")
+    print("----------------- SNIPING SOME NOOOOOBS -------------------")
+    print(f"Sniping Address: {address}")
+    print(f"Gas Multiplier: {gas_multiplier}")
+    print(f"Max Block Allowed: {max_block}")
+    print(f"Sending Transactions on-chain: {send_tx}")
+    print("-----------------------------------------------------------")
     config = Config(
         strategy=StrategyEnum.SNIPE,
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,
+        min_liquidity=min_liquidity,
+        max_liquidity=max_liquidity,
+        gas_multiplier=gas_multiplier,
+        max_block=max_block,
         max_amount=max_amount,
         min_amount=min_amount,
-        min_liquidity=20000,
-        max_liquidity=1000000000,
     )
-    print("-----------------------------------------------------------")
-    print("----------------- SNIPING SOME NOOOOOBS -------------------")
-    print("-----------------------------------------------------------")
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)

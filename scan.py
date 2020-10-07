@@ -30,6 +30,16 @@ from services.ttypes.strategy import StrategyEnum
     default=50000000,
     help="Set max liquidity (Default: 500,000)",
 )
+@click.option(
+    "--gas-multiplier",
+    default=1.5,
+    help="Set gas price multipler (Default: 1.5)",
+)
+@click.option(
+    "--max-block",
+    default=3,
+    help="Set max number of block we allow the transaction to go through (Default: 3)",
+)
 def scan(
     kovan: bool,
     debug: bool,
@@ -37,11 +47,15 @@ def scan(
     min_amount: float,
     min_liquidity: int,
     max_liquidity: int,
+    gas_multiplier: float,
+    max_block: int,
 ) -> None:
     print("-----------------------------------------------------------")
     print("--------------- JUST SCANNING SOME ARBS -------------------")
     print("-----------------------------------------------------------")
-
+    print(f"Gas Multiplier: {gas_multiplier}")
+    print(f"Max Block Allowed: {max_block}")
+    print("-----------------------------------------------------------")
     config = Config(
         strategy=StrategyEnum.SCAN,
         kovan=kovan,
@@ -51,6 +65,8 @@ def scan(
         min_amount=min_amount,
         min_liquidity=min_liquidity,
         max_liquidity=max_liquidity,
+        gas_multiplier=gas_multiplier,
+        max_block=max_block,
     )
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()

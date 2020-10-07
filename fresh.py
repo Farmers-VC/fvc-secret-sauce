@@ -59,6 +59,7 @@ def fresh(
 ) -> None:
     print("-----------------------------------------------------------")
     print("--------------- ARBITRAGING FRESH POOLS -------------------")
+    print("-----------------------------------------------------------")
     print(f"Consecutive Arbitrage: {consecutive}")
     print(f"Gas Multiplier: {gas_multiplier}")
     print(f"Max Block Allowed: {max_block}")
