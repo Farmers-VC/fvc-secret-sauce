@@ -53,8 +53,8 @@ from services.ttypes.strategy import StrategyEnum
 )
 @click.option(
     "--only-tokens",
-    default="",
-    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: '')",
+    default="all",
+    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: all)",
 )
 @click.option("--address", help="Specify a specific arbitrageur address to snipe")
 def snipe(
