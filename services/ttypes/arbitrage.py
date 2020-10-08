@@ -172,8 +172,15 @@ class ArbitragePath:
             "'", '"'
         )
 
+    def print_path(self) -> str:
+        paths = f"{self.connecting_paths[0].token_in.name}"
+        for idx, path in enumerate(self.connecting_paths):
+            path_token_out = path.token_out
+            paths += f" -> {path_token_out.name} ({path.pool.type.name})"
+        print(paths)
+
     def print(self, latest_block: int, tx_hash: str = "") -> str:
-        paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name} ({self.connecting_paths[0].pool.type.name})"
+        paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name}"
         for idx, path in enumerate(self.connecting_paths):
             path_token_out = path.token_out
             paths += f" -> {path_token_out.from_wei(self.all_optimal_amount_out_wei[idx])} {path_token_out.name} ({path.pool.type.name})"

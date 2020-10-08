@@ -82,7 +82,7 @@ class Arbitrage:
             - arbitrage_path.gas_price_execution
         )
 
-        if arbitrage_amount + arbitrage_path.gas_price_execution > 0:
+        if arbitrage_amount > 0:
             self._optimize_arbitrage_amount(
                 arbitrage_path,
                 arbitrage_amount,
