@@ -72,11 +72,6 @@ class PrinterContract:
         ):
             return
 
-        if all(
-            not arbitrage_path.contain_token_name(token_name)
-            for token_name in self.config.only_tokens
-        ):
-            return
         try:
             arbitrage_path.consecutive_arbs = 0
             tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
