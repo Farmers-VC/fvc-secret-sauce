@@ -51,6 +51,11 @@ from services.ttypes.strategy import StrategyEnum
     default="latest",
     help="Since Block (latest|pending)(Default: latest)",
 )
+@click.option(
+    "--only-tokens",
+    default="",
+    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: '')",
+)
 @click.option("--address", help="Specify a specific arbitrageur address to snipe")
 def snipe(
     kovan: bool,
@@ -63,6 +68,7 @@ def snipe(
     gas_multiplier: float,
     max_block: int,
     since: str,
+    only_tokens: str,
     address: str,
 ) -> None:
     print("-----------------------------------------------------------")
@@ -73,6 +79,7 @@ def snipe(
     print(f"Max Block Allowed: {max_block}")
     print(f"Sending Transactions on-chain: {send_tx}")
     print(f"Since Block: {since}")
+    print(f"Only Tokens: {only_tokens}")
     print("-----------------------------------------------------------")
     config = Config(
         strategy=StrategyEnum.SNIPE,
@@ -86,6 +93,7 @@ def snipe(
         gas_multiplier=gas_multiplier,
         max_block=max_block,
         since=since,
+        only_tokens=only_tokens,
     )
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()

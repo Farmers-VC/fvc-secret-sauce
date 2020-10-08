@@ -43,6 +43,12 @@ class ArbitragePath:
                 return True
         return False
 
+    def contain_token_name(self, token_name: str) -> bool:
+        for path in self.connecting_paths:
+            if path.pool.contain_token_name(token_name):
+                return True
+        return False
+
     @property
     def pool_types(self) -> List[int]:
         pool_types = []

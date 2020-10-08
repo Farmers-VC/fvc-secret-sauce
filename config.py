@@ -80,6 +80,7 @@ class Config:
         gas_multiplier: float = 1.5,
         max_block: int = 3,
         since: str = "latest",
+        only_tokens: str = "",
     ):
         self.strategy = strategy
         self.kovan = kovan
@@ -92,6 +93,7 @@ class Config:
         self.gas_multiplier = gas_multiplier
         self.max_block = max_block
         self.since = since
+        self.only_tokens = only_tokens.split(",")
 
         if max_block < 2:
             raise Exception("Max block has to be minimum 2")

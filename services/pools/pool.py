@@ -26,6 +26,12 @@ class Pool:
             return "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
         return None
 
+    def contain_token_name(self, token_name: str) -> bool:
+        for token in self.tokens:
+            if token_name.lower() == token.name.lower():
+                return True
+        return False
+
     def contain_token(self, token_address: str) -> bool:
         for token in self.tokens:
             if token_address.lower() == token.address.lower():

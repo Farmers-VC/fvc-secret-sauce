@@ -46,6 +46,11 @@ from services.ttypes.strategy import StrategyEnum
     default="latest",
     help="Since Block (latest|pending) (Default: latest)",
 )
+@click.option(
+    "--only-tokens",
+    default="",
+    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: '')",
+)
 def scan(
     kovan: bool,
     debug: bool,
@@ -57,6 +62,7 @@ def scan(
     gas_multiplier: float,
     max_block: int,
     since: str,
+    only_tokens: str,
 ) -> None:
     print("-----------------------------------------------------------")
     print("------------------ SCANNING SOME ARBS ---------------------")
@@ -65,6 +71,7 @@ def scan(
     print(f"Max Block Allowed: {max_block}")
     print(f"Sending Transactions on-chain: {send_tx}")
     print(f"Since Block: {since}")
+    print(f"Only Tokens: {only_tokens}")
     print("-----------------------------------------------------------")
     config = Config(
         strategy=StrategyEnum.SCAN,
@@ -78,6 +85,7 @@ def scan(
         gas_multiplier=gas_multiplier,
         max_block=max_block,
         since=since,
+        only_tokens=only_tokens,
     )
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
