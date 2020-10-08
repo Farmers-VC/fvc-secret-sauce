@@ -22,8 +22,8 @@ FIXED_ADDRESSES_PER_TOKEN_PATH = 7
 
 # Arbitrage
 MAX_STEP_SUPPORTED = 3
-ESTIMATE_GAS_EXECUTION = 350000
-ESTIMATE_GAS_LIMIT = 500000
+ESTIMATE_GAS_EXECUTION = 450000
+ESTIMATE_GAS_LIMIT = 1000000
 INCREMENTAL_STEP = 0.1
 
 # Path
@@ -79,6 +79,7 @@ class Config:
         max_liquidity: int = 500000,
         gas_multiplier: float = 1.5,
         max_block: int = 3,
+        since: str = "latest",
     ):
         self.strategy = strategy
         self.kovan = kovan
@@ -90,6 +91,7 @@ class Config:
         self.max_liquidity = max_liquidity
         self.gas_multiplier = gas_multiplier
         self.max_block = max_block
+        self.since = since
 
         if max_block < 2:
             raise Exception("Max block has to be minimum 2")

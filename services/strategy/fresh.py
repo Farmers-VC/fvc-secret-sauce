@@ -72,7 +72,9 @@ class StrategyFresh:
                     )
                 )
                 gas_price = self.ethereum.w3.eth.gasPrice
-            gas_price = int(gas_price * self.config.gas_multiplier)
+            gas_price = max(
+                [int(gas_price * self.config.gas_multiplier), Web3.toWei(130, "gwei")]
+            )
             self.arbitrage.calc_arbitrage_and_print(
                 arbitrage_paths, latest_block, gas_price
             )

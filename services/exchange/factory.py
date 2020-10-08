@@ -4,17 +4,18 @@ from services.exchange.balancer import BalancerExchange
 from services.exchange.iexchange import ExchangeInterface
 from services.exchange.uniswap import UniswapExchange
 from services.ttypes.contract import ContractTypeEnum
+from config import Config
 
 
 class ExchangeFactory:
     @staticmethod
     def create(
-        contract: Contract, contract_type: ContractTypeEnum, debug: bool = False
+        contract: Contract, contract_type: ContractTypeEnum, config: Config
     ) -> ExchangeInterface:
         if contract_type == ContractTypeEnum.BPOOL:
-            return BalancerExchange(contract, debug)
+            return BalancerExchange(contract, config)
         if contract_type == ContractTypeEnum.UNISWAP:
-            return UniswapExchange(contract, debug)
+            return UniswapExchange(contract, config)
         if contract_type == ContractTypeEnum.SUSHISWAP:
-            return UniswapExchange(contract, debug)
+            return UniswapExchange(contract, config)
         raise Exception("Exchange not supported.")

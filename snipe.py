@@ -46,6 +46,11 @@ from services.ttypes.strategy import StrategyEnum
     default=3,
     help="Set max number of block we allow the transaction to go through (Default: 3)",
 )
+@click.option(
+    "--since",
+    default="latest",
+    help="Since Block (latest|pending)(Default: latest)",
+)
 @click.option("--address", help="Specify a specific arbitrageur address to snipe")
 def snipe(
     kovan: bool,
@@ -55,28 +60,32 @@ def snipe(
     min_liquidity: int,
     max_liquidity: int,
     send_tx: bool,
-    address: str,
     gas_multiplier: float,
     max_block: int,
+    since: str,
+    address: str,
 ) -> None:
     print("-----------------------------------------------------------")
     print("----------------- SNIPING SOME NOOOOOBS -------------------")
+    print("-----------------------------------------------------------")
     print(f"Sniping Address: {address}")
     print(f"Gas Multiplier: {gas_multiplier}")
     print(f"Max Block Allowed: {max_block}")
     print(f"Sending Transactions on-chain: {send_tx}")
+    print(f"Since Block: {since}")
     print("-----------------------------------------------------------")
     config = Config(
         strategy=StrategyEnum.SNIPE,
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,
+        max_amount=max_amount,
+        min_amount=min_amount,
         min_liquidity=min_liquidity,
         max_liquidity=max_liquidity,
         gas_multiplier=gas_multiplier,
         max_block=max_block,
-        max_amount=max_amount,
-        min_amount=min_amount,
+        since=since,
     )
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()

@@ -160,8 +160,6 @@ class Arbitrage:
         exchange_by_pool_address = {}
         for pool in self.pools:
             contract = self.ethereum.init_contract(pool)
-            exchange = ExchangeFactory.create(
-                contract, pool.type, debug=self.config.debug
-            )
+            exchange = ExchangeFactory.create(contract, pool.type, config=self.config)
             exchange_by_pool_address[pool.address] = exchange
         return exchange_by_pool_address

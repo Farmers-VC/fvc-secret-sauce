@@ -45,6 +45,11 @@ from services.ttypes.strategy import StrategyEnum
     default=3,
     help="Set max number of block we allow the transaction to go through (Default: 3)",
 )
+@click.option(
+    "--since",
+    default="latest",
+    help="Since Block (latest|pending) (Default: latest)",
+)
 def fresh(
     kovan: bool,
     debug: bool,
@@ -56,6 +61,7 @@ def fresh(
     consecutive: int,
     gas_multiplier: float,
     max_block: int,
+    since: str,
 ) -> None:
     print("-----------------------------------------------------------")
     print("--------------- ARBITRAGING FRESH POOLS -------------------")
@@ -64,6 +70,7 @@ def fresh(
     print(f"Gas Multiplier: {gas_multiplier}")
     print(f"Max Block Allowed: {max_block}")
     print(f"Sending Transactions on-chain: {send_tx}")
+    print(f"Since Block: {since}")
     print("-----------------------------------------------------------")
     config = Config(
         strategy=StrategyEnum.FRESH,
@@ -76,6 +83,7 @@ def fresh(
         max_liquidity=max_liquidity,
         gas_multiplier=gas_multiplier,
         max_block=max_block,
+        since=since,
     )
     ethereum = Ethereum(config)
     strategy = StrategyFresh(consecutive, ethereum, config)
