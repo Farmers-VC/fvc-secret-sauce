@@ -26,9 +26,7 @@ class UniswapExchange(ExchangeInterface):
         self, token_in: Token, token_out: Token, amount_in_wei: int
     ) -> int:
         amount_in = token_in.from_wei(amount_in_wei)
-        token_0 = self.contract.functions.token0().call(
-            block_identifier=self.config.since
-        )
+        token_0 = self.contract.functions.token0().call()
         reserve_0, reserve_1, _ = self.contract.functions.getReserves().call(
             block_identifier=self.config.since
         )
