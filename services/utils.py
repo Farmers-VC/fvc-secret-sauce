@@ -57,5 +57,5 @@ def heartbeat(config: Config) -> None:
     slack_webhook = config.get("SLACK_HEARTBEAT_WEBHOOK")
     requests.post(
         slack_webhook,
-        json={"text": f"[config.strategy.name] Heartbeat"},
+        json={"text": f"[{config.strategy.name}] Heartbeat"},
     )
