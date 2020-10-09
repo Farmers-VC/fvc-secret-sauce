@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List
+import sys
 
 from web3 import Web3
 
@@ -178,6 +179,7 @@ class ArbitragePath:
             path_token_out = path.token_out
             paths += f" -> {path_token_out.name} ({path.pool.type.name})"
         print(paths)
+        sys.stdout.flush()
 
     def print(self, latest_block: int, tx_hash: str = "") -> str:
         paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name}"

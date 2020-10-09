@@ -1,4 +1,5 @@
 import click
+import sys
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -64,15 +65,18 @@ def scan(
     since: str,
     only_tokens: str,
 ) -> None:
-    print("-----------------------------------------------------------")
-    print("------------------ SCANNING SOME ARBS ---------------------")
-    print("-----------------------------------------------------------")
-    print(f"Gas Multiplier: {gas_multiplier}")
-    print(f"Max Block Allowed: {max_block}")
-    print(f"Sending Transactions on-chain: {send_tx}")
-    print(f"Since Block: {since}")
-    print(f"Only Tokens: {only_tokens}")
-    print("-----------------------------------------------------------")
+    print(
+        f"-----------------------------------------------------------\n"
+        f"------------------ SCANNING SOME ARBS ---------------------\n"
+        f"-----------------------------------------------------------\n"
+        f"Gas Multiplier: {gas_multiplier}\n"
+        f"Max Block Allowed: {max_block}\n"
+        f"Sending Transactions on-chain: {send_tx}\n"
+        f"Since Block: {since}\n"
+        f"Only Tokens: {only_tokens}\n"
+        f"-----------------------------------------------------------"
+    )
+    sys.stdout.flush()
     config = Config(
         strategy=StrategyEnum.SCAN,
         kovan=kovan,

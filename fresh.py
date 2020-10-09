@@ -1,4 +1,5 @@
 import click
+import sys
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -69,16 +70,19 @@ def fresh(
     since: str,
     only_tokens: str,
 ) -> None:
-    print("-----------------------------------------------------------")
-    print("--------------- ARBITRAGING FRESH POOLS -------------------")
-    print("-----------------------------------------------------------")
-    print(f"Consecutive Arbitrage: {consecutive}")
-    print(f"Gas Multiplier: {gas_multiplier}")
-    print(f"Max Block Allowed: {max_block}")
-    print(f"Sending Transactions on-chain: {send_tx}")
-    print(f"Since Block: {since}")
-    print(f"Only Tokens: {only_tokens}")
-    print("-----------------------------------------------------------")
+    print(
+        f"-----------------------------------------------------------\n"
+        f"--------------- ARBITRAGING FRESH POOLS -------------------\n"
+        f"-----------------------------------------------------------\n"
+        f"Consecutive Arbitrage: {consecutive}\n"
+        f"Gas Multiplier: {gas_multiplier}\n"
+        f"Max Block Allowed: {max_block}\n"
+        f"Sending Transactions on-chain: {send_tx}\n"
+        f"Since Block: {since}\n"
+        f"Only Tokens: {only_tokens}\n"
+        f"-----------------------------------------------------------"
+    )
+    sys.stdout.flush()
     config = Config(
         strategy=StrategyEnum.FRESH,
         kovan=kovan,

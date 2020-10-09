@@ -1,4 +1,5 @@
 import time
+import sys
 from typing import List
 
 from colored import fg, stylize
@@ -28,6 +29,7 @@ class StrategyFresh:
     def _load_recent_arbitrage_path(self) -> List[ArbitragePath]:
         try:
             print("Fetching fresh pools and finding new arbitrage paths")
+            sys.stdout.flush()
             pools = self.pool_loader.load_all_pools()
             path_finder = PathFinder(pools, self.config)
             arbitrage_paths = path_finder.find_all_paths()
@@ -40,6 +42,7 @@ class StrategyFresh:
                     fg("yellow"),
                 )
             )
+            sys.stdout.flush()
         except Exception as e:
             print(
                 stylize(
@@ -47,6 +50,7 @@ class StrategyFresh:
                     fg("red"),
                 )
             )
+            sys.stdout.flush()
             return self._load_recent_arbitrage_path()
         return arbitrage_paths
 
@@ -72,6 +76,7 @@ class StrategyFresh:
                         fg("red"),
                     )
                 )
+                sys.stdout.flush()
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = max(
                 [int(gas_price * self.config.gas_multiplier), Web3.toWei(121, "gwei")]
@@ -85,3 +90,4 @@ class StrategyFresh:
                 f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
                 % (time.time() - start_time)
             )
+            sys.stdout.flush()

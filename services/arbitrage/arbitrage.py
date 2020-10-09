@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple
+import sys
 
 import numpy
 from colored import fg, stylize
@@ -69,6 +70,7 @@ class Arbitrage:
                         fg("light_red"),
                     )
                 )
+                sys.stdout.flush()
                 continue
 
     def _analyze_arbitrage(

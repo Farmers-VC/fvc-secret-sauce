@@ -1,3 +1,4 @@
+import sys
 from web3.eth import Contract
 
 from services.exchange.iexchange import ExchangeInterface
@@ -20,6 +21,7 @@ class UniswapExchange(ExchangeInterface):
             print(
                 f"[Uniswap] Exchange {token_in.from_wei(amount_in_wei)} {token_in.name} -> {token_out.from_wei(amount_out_wei)} {token_out.name}"
             )
+            sys.stdout.flush()
         return amount_out_wei
 
     def _calc_amount_out(

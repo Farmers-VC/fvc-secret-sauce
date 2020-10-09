@@ -1,5 +1,6 @@
 import time
 import requests
+import sys
 from typing import List
 from web3 import Web3
 
@@ -49,6 +50,7 @@ def calculate_gas_price(ethereum: Ethereum, config: Config) -> int:
     gas_price = ethereum.w3.eth.generateGasPrice()
     if config.debug:
         print(f"Gas Price = {ethereum.w3.fromWei(gas_price, 'gwei')} Gwei")
+        sys.stdout.flush()
     return gas_price
 
 

@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import requests
 import yaml
+import sys
 
 from config import Config
 from services.pools.pool import Pool
@@ -14,6 +15,8 @@ class PoolLoader:
 
     def load_all_pools(self) -> List[Pool]:
         print("Loading Uniswap, Balancer, SushiSwap and others pools ...")
+        sys.stdout.flush()
+
         if self.config.kovan:
             return self._load_pools_yaml()
 
@@ -26,6 +29,7 @@ class PoolLoader:
         pools_with_only_tokens = self._filter_only_tokens(all_pools)
         pools_without_blacklist = self._filter_blacklist_pools(pools_with_only_tokens)
         print(f"Found {len(pools_without_blacklist)} pools!")
+        sys.stdout.flush()
         return pools_without_blacklist
 
     def _filter_only_tokens(self, pools: List[Pool]) -> List[Pool]:

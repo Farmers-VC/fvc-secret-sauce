@@ -1,5 +1,6 @@
 import time
 from typing import List
+import sys
 
 from colored import fg, stylize
 from web3 import Web3
@@ -27,7 +28,6 @@ class StrategyScan:
         self.path_finder = PathFinder(self.pools, self.config)
 
     def scan_arbitrage(self):
-        print(f"Scanning for arbitrage paths....")
         arbitrage_paths: List[ArbitragePath] = self.path_finder.find_all_paths()
         print(
             stylize(
@@ -35,6 +35,7 @@ class StrategyScan:
                 fg("yellow"),
             )
         )
+        sys.stdout.flush()
         current_block = self.ethereum.w3.eth.blockNumber
         while True:
             if current_block % 200 == 0:
@@ -47,6 +48,7 @@ class StrategyScan:
                 gas_price = calculate_gas_price(self.ethereum, self.config)
             except Exception:
                 print("Could not calculate gas price")
+                sys.stdout.flush()
                 gas_price = self.ethereum.w3.eth.gasPrice
             gas_price = int(gas_price * 1.5)
             self.arbitrage.calc_arbitrage_and_print(
@@ -56,3 +58,4 @@ class StrategyScan:
                 f"--- Ended in %s seconds --- (Gas: {Web3.fromWei(gas_price, 'gwei')})"
                 % (time.time() - start_time)
             )
+            sys.stdout.flush()

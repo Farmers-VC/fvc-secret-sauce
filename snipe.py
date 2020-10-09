@@ -1,6 +1,7 @@
 from typing import List
 
 import click
+import sys
 import yaml
 from web3 import Web3
 
@@ -71,16 +72,19 @@ def snipe(
     only_tokens: str,
     address: str,
 ) -> None:
-    print("-----------------------------------------------------------")
-    print("----------------- SNIPING SOME NOOOOOBS -------------------")
-    print("-----------------------------------------------------------")
-    print(f"Sniping Address: {address}")
-    print(f"Gas Multiplier: {gas_multiplier}")
-    print(f"Max Block Allowed: {max_block}")
-    print(f"Sending Transactions on-chain: {send_tx}")
-    print(f"Since Block: {since}")
-    print(f"Only Tokens: {only_tokens}")
-    print("-----------------------------------------------------------")
+    print(
+        f"-----------------------------------------------------------\n"
+        f"----------------- SNIPING SOME NOOOOOBS -------------------\n"
+        f"-----------------------------------------------------------\n"
+        f"Sniping Address: {address}\n"
+        f"Gas Multiplier: {gas_multiplier}\n"
+        f"Max Block Allowed: {max_block}\n"
+        f"Sending Transactions on-chain: {send_tx}\n"
+        f"Since Block: {since}\n"
+        f"Only Tokens: {only_tokens}\n"
+        f"-----------------------------------------------------------"
+    )
+    sys.stdout.flush()
     config = Config(
         strategy=StrategyEnum.SNIPE,
         kovan=kovan,
