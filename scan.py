@@ -48,8 +48,8 @@ from services.ttypes.strategy import StrategyEnum
 )
 @click.option(
     "--only-tokens",
-    default="",
-    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: '')",
+    default="all",
+    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: all)",
 )
 def scan(
     kovan: bool,
