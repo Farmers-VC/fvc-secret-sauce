@@ -1,4 +1,5 @@
 import time
+import requests
 from typing import List
 from web3 import Web3
 
@@ -49,3 +50,12 @@ def calculate_gas_price(ethereum: Ethereum, config: Config) -> int:
     if config.debug:
         print(f"Gas Price = {ethereum.w3.fromWei(gas_price, 'gwei')} Gwei")
     return gas_price
+
+
+def heartbeat(config: Config) -> None:
+    """Send heartbeat signal"""
+    slack_webhook = config.get("SLACK_HEARTBEAT_WEBHOOK")
+    requests.post(
+        slack_webhook,
+        json={"text": f"[config.strategy.name] Heartbeat"},
+    )

@@ -10,7 +10,7 @@ from services.ethereum.ethereum import Ethereum
 from services.path.path import PathFinder
 from services.pools.loader import PoolLoader
 from services.ttypes.arbitrage import ArbitragePath
-from services.utils import wait_new_block, calculate_gas_price
+from services.utils import wait_new_block, calculate_gas_price, heartbeat
 
 
 class StrategyFresh:
@@ -58,6 +58,7 @@ class StrategyFresh:
             # Load again new pools Roughly every 40 minutes
             if counter % 200 == 0:
                 arbitrage_paths = self._load_recent_arbitrage_path()
+                heartbeat(self.config)
             latest_block = wait_new_block(self.ethereum, current_block)
             start_time = time.time()
             current_block = latest_block

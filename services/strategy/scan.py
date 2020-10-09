@@ -10,7 +10,7 @@ from services.ethereum.ethereum import Ethereum
 from services.path.path import PathFinder
 from services.pools.pool import Pool
 from services.ttypes.arbitrage import ArbitragePath
-from services.utils import wait_new_block, calculate_gas_price
+from services.utils import wait_new_block, calculate_gas_price, heartbeat
 
 
 class StrategyScan:
@@ -37,6 +37,8 @@ class StrategyScan:
         )
         current_block = self.ethereum.w3.eth.blockNumber
         while True:
+            if current_block % 200 == 0:
+                heartbeat(self.config)
             latest_block = wait_new_block(self.ethereum, current_block)
             current_block = latest_block
             start_time = time.time()

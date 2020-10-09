@@ -8,6 +8,7 @@ from services.path.path import PathFinder
 from services.pools.pool import Pool
 from services.ttypes.arbitrage import ArbitragePath
 from services.ttypes.sniper import SnipingArbitrage, SnipingNoob
+from services.utils import heartbeat
 
 ARGUMENT_LENGTH = 64
 
@@ -26,6 +27,8 @@ class StrategySnipe:
     def snipe_arbitrageur(self) -> None:
         while True:
             latest_block = self.ethereum.w3.eth.blockNumber
+            if latest_block % 200:
+                heartbeat(self.config)
             # start_time = time.time()
             sniping_arbitrages: List[SnipingArbitrage] = self._scan_mempool_and_snipe()
             for sniping_arbitrage in sniping_arbitrages:
