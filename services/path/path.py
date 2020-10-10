@@ -19,7 +19,7 @@ class PathFinder:
 
     def find_all_paths(self) -> List[ArbitragePath]:
         all_arbitrage_paths: List[ArbitragePath] = []
-        existing_paths: Dict[str, bool] = {}
+        existing_paths = set()
         for weth_pool in self.pools_by_token[self.weth_address]:
             token_in, token_out = weth_pool.get_token_pair_from_token_in(
                 self.weth_address
@@ -41,10 +41,10 @@ class PathFinder:
             )
             for combined_path in combined_paths:
                 arb_path = ArbitragePath(connecting_paths=combined_path)
-                if existing_paths[arb_path.path_id]:
+                if arb_path.path_id in existing_paths:
                     continue
                 all_arbitrage_paths.append(arb_path)
-                existing_paths[arb_path.path_id] = True
+                existing_paths.add(arb_path.path_id)
         print(
             f"Out of {self.num_pools} pools (Uniswap/Balancer/Sushiswap), PathFinder detected {len(all_arbitrage_paths)} paths:"
         )
