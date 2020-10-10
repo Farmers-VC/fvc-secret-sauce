@@ -37,7 +37,7 @@ class StrategyFresh:
                 pools, self.ethereum, self.config, consecutive=self.consecutive
             )
             print(
-                f"Finish fetching pools & detecting paths (%s)"
+                f"Finish fetching pools & detecting paths (%s s)"
                 % (time.time() - start_time)
             )
             sys.stdout.flush()
