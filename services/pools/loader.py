@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import requests
 import yaml
+import sys
 
 from config import Config
 from services.pools.pool import Pool
@@ -14,6 +15,8 @@ class PoolLoader:
 
     def load_all_pools(self) -> List[Pool]:
         print("Loading Uniswap, Balancer, SushiSwap and others pools ...")
+        sys.stdout.flush()
+
         if self.config.kovan:
             return self._load_pools_yaml()
 
@@ -22,11 +25,21 @@ class PoolLoader:
         sushiswap_pools = []  # self._load_sushiswap_pools()
 
         yaml_pools = self._load_pools_yaml()
-        pools_without_blacklist = self._filter_blacklist_pools(
-            uniswap_pools + balancer_pools + sushiswap_pools + yaml_pools
-        )
-        print(f"Found {len(pools_without_blacklist)} pools!")
+        all_pools = uniswap_pools + balancer_pools + sushiswap_pools + yaml_pools
+        pools_with_only_tokens = self._filter_only_tokens(all_pools)
+        pools_without_blacklist = self._filter_blacklist_pools(pools_with_only_tokens)
         return pools_without_blacklist
+
+    def _filter_only_tokens(self, pools: List[Pool]) -> List[Pool]:
+        if not self.config.only_tokens:
+            return pools
+        filtered_pools: List[Pool] = []
+        for pool in pools:
+            for token_name in self.config.only_tokens:
+                if pool.contain_token_name(token_name):
+                    filtered_pools.append(pool)
+                    continue
+        return filtered_pools
 
     def _filter_blacklist_pools(self, pools: List[Pool]) -> List[Pool]:
         blacklist_tokens = self._load_tokens_yaml(

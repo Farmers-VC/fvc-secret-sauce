@@ -1,5 +1,6 @@
 from colored import fg, stylize
 from web3.exceptions import TimeExhausted
+import sys
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -10,7 +11,11 @@ from services.ttypes.strategy import StrategyEnum
 
 class PrinterContract:
     def __init__(
-        self, ethereum: Ethereum, notification: Notification, config: Config
+        self,
+        ethereum: Ethereum,
+        notification: Notification,
+        config: Config,
+        consecutive: int = 2,
     ) -> None:
         self.ethereum = ethereum
         self.contract = ethereum.init_printer_contract()
@@ -18,6 +23,7 @@ class PrinterContract:
         self.weth_address = self.config.get("WETH_ADDRESS").lower()
         self.notification = notification
         self.executor_address = self.config.get("EXECUTOR_ADDRESS")
+        self.consecutive = consecutive
 
     def arbitrage_on_chain(
         self,
@@ -39,6 +45,7 @@ class PrinterContract:
                     fg("light_red"),
                 )
             )
+            sys.stdout.flush()
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
         """This function will simulate sending the transaction on-chain and let us know if it would go through"""
@@ -56,6 +63,7 @@ class PrinterContract:
             return True
         except Exception as e:
             print(f"This transaction would not go through: {str(e)}")
+            sys.stdout.flush()
             arbitrage_path.consecutive_arbs = 0
             return False
 
@@ -63,9 +71,10 @@ class PrinterContract:
         """Trigger the arbitrage transaction on-chain"""
         if (
             self.config.strategy == StrategyEnum.FRESH
-            and arbitrage_path.consecutive_arbs < 2
+            and arbitrage_path.consecutive_arbs < self.consecutive
         ):
             return
+
         try:
             arbitrage_path.consecutive_arbs = 0
             tx_hash = self._building_tx_and_signing_and_send(arbitrage_path)
@@ -120,6 +129,7 @@ class PrinterContract:
                 fg("yellow"),
             )
         )
+        sys.stdout.flush()
         return tx_hash.hex()
 
     def _validate_transactions(
@@ -151,11 +161,14 @@ class PrinterContract:
         latest_block: int,
         tx_hash: str = "",
     ) -> None:
+        to_print = arbitrage_path.print(latest_block, tx_hash)
+        print(stylize(to_print, fg("light_blue")))
+        sys.stdout.flush()
+
         if (
             self.config.strategy != StrategyEnum.FRESH
-            or arbitrage_path.consecutive_arbs >= 2
+            or arbitrage_path.consecutive_arbs >= self.consecutive
         ):
-            to_print = arbitrage_path.print(latest_block, tx_hash)
             if self.config.strategy == StrategyEnum.SNIPE:
                 self.notification.send_snipe_noobs(to_print)
             else:

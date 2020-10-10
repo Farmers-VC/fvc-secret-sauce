@@ -1,4 +1,5 @@
 import click
+import sys
 
 from config import Config
 from services.ethereum.ethereum import Ethereum
@@ -30,6 +31,31 @@ from services.ttypes.strategy import StrategyEnum
     default=100000,
     help="Set max liquidity (Default: 500,000)",
 )
+@click.option(
+    "--consecutive",
+    default=2,
+    help="Set triggering tx after how many consecutive block of arbitrage (Default: 2)",
+)
+@click.option(
+    "--gas-multiplier",
+    default=1.5,
+    help="Set gas price multipler (Default: 1.5)",
+)
+@click.option(
+    "--max-block",
+    default=3,
+    help="Set max number of block we allow the transaction to go through (Default: 3)",
+)
+@click.option(
+    "--since",
+    default="latest",
+    help="Since Block (latest|pending) (Default: latest)",
+)
+@click.option(
+    "--only-tokens",
+    default="all",
+    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: all)",
+)
 def fresh(
     kovan: bool,
     debug: bool,
@@ -38,11 +64,25 @@ def fresh(
     min_amount: float,
     min_liquidity: int,
     max_liquidity: int,
+    consecutive: int,
+    gas_multiplier: float,
+    max_block: int,
+    since: str,
+    only_tokens: str,
 ) -> None:
-    print("-----------------------------------------------------------")
-    print("--------------- ARBITRAGING FRESH POOLS -------------------")
-    print("-----------------------------------------------------------")
-
+    print(
+        f"-----------------------------------------------------------\n"
+        f"--------------- ARBITRAGING FRESH POOLS -------------------\n"
+        f"-----------------------------------------------------------\n"
+        f"Consecutive Arbitrage: {consecutive}\n"
+        f"Gas Multiplier: {gas_multiplier}\n"
+        f"Max Block Allowed: {max_block}\n"
+        f"Sending Transactions on-chain: {send_tx}\n"
+        f"Since Block: {since}\n"
+        f"Only Tokens: {only_tokens}\n"
+        f"-----------------------------------------------------------"
+    )
+    sys.stdout.flush()
     config = Config(
         strategy=StrategyEnum.FRESH,
         kovan=kovan,
@@ -52,12 +92,13 @@ def fresh(
         min_amount=min_amount,
         min_liquidity=min_liquidity,
         max_liquidity=max_liquidity,
+        gas_multiplier=gas_multiplier,
+        max_block=max_block,
+        since=since,
+        only_tokens=only_tokens,
     )
     ethereum = Ethereum(config)
-    strategy = StrategyFresh(
-        ethereum,
-        config,
-    )
+    strategy = StrategyFresh(consecutive, ethereum, config)
     strategy.arbitrage_fresh_pools()
 
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import List
+import sys
 
 from web3 import Web3
 
@@ -40,6 +41,12 @@ class ArbitragePath:
     def contain_token(self, token_address: str) -> bool:
         for path in self.connecting_paths:
             if path.pool.contain_token(token_address):
+                return True
+        return False
+
+    def contain_token_name(self, token_name: str) -> bool:
+        for path in self.connecting_paths:
+            if path.pool.contain_token_name(token_name):
                 return True
         return False
 
@@ -166,8 +173,16 @@ class ArbitragePath:
             "'", '"'
         )
 
+    def print_path(self) -> str:
+        paths = f"{self.connecting_paths[0].token_in.name}"
+        for idx, path in enumerate(self.connecting_paths):
+            path_token_out = path.token_out
+            paths += f" -> {path_token_out.name} ({path.pool.type.name})"
+        print(paths)
+        sys.stdout.flush()
+
     def print(self, latest_block: int, tx_hash: str = "") -> str:
-        paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name} ({self.connecting_paths[0].pool.type.name})"
+        paths = f"{self.connecting_paths[0].token_in.from_wei(self.optimal_amount_in_wei)} {self.connecting_paths[0].token_in.name}"
         for idx, path in enumerate(self.connecting_paths):
             path_token_out = path.token_out
             paths += f" -> {path_token_out.from_wei(self.all_optimal_amount_out_wei[idx])} {path_token_out.name} ({path.pool.type.name})"

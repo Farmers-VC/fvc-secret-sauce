@@ -1,6 +1,7 @@
 from typing import List
 
 import click
+import sys
 import yaml
 from web3 import Web3
 
@@ -25,16 +26,65 @@ from services.ttypes.strategy import StrategyEnum
     default=3.0,
     help="Set min Amount to trade with in WETH (Default: 3.0)",
 )
+@click.option(
+    "--min-liquidity",
+    default=20000,
+    help="Set minimum liquidity (Default: 30,000)",
+)
+@click.option(
+    "--max-liquidity",
+    default=10000000000,
+    help="Set max liquidity (Default: 500,000)",
+)
 @click.option("--send-tx", is_flag=True, help="Send the transaction on-chain")
+@click.option(
+    "--gas-multiplier",
+    default=1.5,
+    help="Set gas price multipler (Default: 1.5)",
+)
+@click.option(
+    "--max-block",
+    default=3,
+    help="Set max number of block we allow the transaction to go through (Default: 3)",
+)
+@click.option(
+    "--since",
+    default="latest",
+    help="Since Block (latest|pending)(Default: latest)",
+)
+@click.option(
+    "--only-tokens",
+    default="all",
+    help="Only filter tokens by name (i.e: --only XIOT,XAMP,UNI) (Default: all)",
+)
 @click.option("--address", help="Specify a specific arbitrageur address to snipe")
 def snipe(
     kovan: bool,
     debug: bool,
     max_amount: float,
     min_amount: float,
+    min_liquidity: int,
+    max_liquidity: int,
     send_tx: bool,
+    gas_multiplier: float,
+    max_block: int,
+    since: str,
+    only_tokens: str,
     address: str,
 ) -> None:
+    print(
+        f"-----------------------------------------------------------\n"
+        f"----------------- SNIPING SOME NOOOOOBS -------------------\n"
+        f"-----------------------------------------------------------\n"
+        f"Sniping Address: {address}\n"
+        f"Gas Multiplier: {gas_multiplier}\n"
+        f"Max Block Allowed: {max_block}\n"
+        f"Sending Transactions on-chain: {send_tx}\n"
+        f"Since Block: {since}\n"
+        f"Only Tokens: {only_tokens}\n"
+        f"-----------------------------------------------------------"
+    )
+    sys.stdout.flush()
     config = Config(
         strategy=StrategyEnum.SNIPE,
         kovan=kovan,
@@ -42,12 +92,13 @@ def snipe(
         send_tx=send_tx,
         max_amount=max_amount,
         min_amount=min_amount,
-        min_liquidity=20000,
-        max_liquidity=1000000000,
+        min_liquidity=min_liquidity,
+        max_liquidity=max_liquidity,
+        gas_multiplier=gas_multiplier,
+        max_block=max_block,
+        since=since,
+        only_tokens=only_tokens,
     )
-    print("-----------------------------------------------------------")
-    print("----------------- SNIPING SOME NOOOOOBS -------------------")
-    print("-----------------------------------------------------------")
     pool_loader = PoolLoader(config=config)
     pools = pool_loader.load_all_pools()
     ethereum = Ethereum(config)

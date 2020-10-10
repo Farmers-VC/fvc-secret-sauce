@@ -3,11 +3,12 @@ import abc
 from web3.eth import Contract
 
 from services.pools.token import Token
+from config import Config
 
 
 class ExchangeInterface(abc.ABC):
     @abc.abstractclassmethod
-    def __init__(self, contract: Contract, debug: bool = False) -> None:
+    def __init__(self, contract: Contract, config: Config) -> None:
         pass
 
     @abc.abstractclassmethod

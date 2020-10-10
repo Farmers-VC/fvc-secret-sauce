@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple
+import sys
 
 import numpy
 from colored import fg, stylize
@@ -15,7 +16,13 @@ from services.printer.printer import PrinterContract
 
 
 class Arbitrage:
-    def __init__(self, pools: List[Pool], ethereum: Ethereum, config: Config) -> None:
+    def __init__(
+        self,
+        pools: List[Pool],
+        ethereum: Ethereum,
+        config: Config,
+        consecutive: int = 2,
+    ) -> None:
         self.pools = pools
         self.ethereum = ethereum
         self.config = config
@@ -25,7 +32,9 @@ class Arbitrage:
 
         self.exchange_by_pool_address = self._init_all_exchange_contracts()
         self.notification = Notification(self.config)
-        self.printer = PrinterContract(self.ethereum, self.notification, self.config)
+        self.printer = PrinterContract(
+            self.ethereum, self.notification, self.config, consecutive=consecutive
+        )
 
     def calc_arbitrage_and_print(
         self,
@@ -61,6 +70,7 @@ class Arbitrage:
                         fg("light_red"),
                     )
                 )
+                sys.stdout.flush()
                 continue
 
     def _analyze_arbitrage(
@@ -74,7 +84,7 @@ class Arbitrage:
             - arbitrage_path.gas_price_execution
         )
 
-        if arbitrage_amount + arbitrage_path.gas_price_execution > 0:
+        if arbitrage_amount > 0:
             self._optimize_arbitrage_amount(
                 arbitrage_path,
                 arbitrage_amount,
@@ -152,8 +162,6 @@ class Arbitrage:
         exchange_by_pool_address = {}
         for pool in self.pools:
             contract = self.ethereum.init_contract(pool)
-            exchange = ExchangeFactory.create(
-                contract, pool.type, debug=self.config.debug
-            )
+            exchange = ExchangeFactory.create(contract, pool.type, config=self.config)
             exchange_by_pool_address[pool.address] = exchange
         return exchange_by_pool_address

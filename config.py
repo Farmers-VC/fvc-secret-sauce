@@ -22,7 +22,7 @@ FIXED_ADDRESSES_PER_TOKEN_PATH = 7
 
 # Arbitrage
 MAX_STEP_SUPPORTED = 3
-ESTIMATE_GAS_EXECUTION = 400000
+ESTIMATE_GAS_EXECUTION = 450000
 ESTIMATE_GAS_LIMIT = 1000000
 INCREMENTAL_STEP = 0.1
 
@@ -46,6 +46,7 @@ SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK = os.environ[
     "SLACK_ARBITRAGE_OPPORTUNITIES_WEBHOOK"
 ]
 SLACK_SNIPE_WEBHOOK = os.environ["SLACK_SNIPE_WEBHOOK"]
+SLACK_HEARTBEAT_WEBHOOK = os.environ["SLACK_HEARTBEAT_WEBHOOK"]
 
 # Kovan Env
 KOVAN_ETHEREUM_WS_URI = os.environ["KOVAN_ETHEREUM_WS_URI"]
@@ -77,6 +78,10 @@ class Config:
         min_amount: float = 3.0,
         min_liquidity: int = 30000,
         max_liquidity: int = 500000,
+        gas_multiplier: float = 1.5,
+        max_block: int = 3,
+        since: str = "latest",
+        only_tokens: str = "all",
     ):
         self.strategy = strategy
         self.kovan = kovan
@@ -86,6 +91,13 @@ class Config:
         self.min_amount = min_amount
         self.min_liquidity = min_liquidity
         self.max_liquidity = max_liquidity
+        self.gas_multiplier = gas_multiplier
+        self.max_block = max_block
+        self.since = since
+        self.only_tokens = [] if only_tokens == "all" else only_tokens.split(",")
+
+        if max_block < 2:
+            raise Exception("Max block has to be minimum 2")
 
     def get(self, name: str):
         if self.kovan:
@@ -109,8 +121,8 @@ class Config:
         if self.kovan:
             return 1000
         if self.strategy == StrategyEnum.SNIPE:
-            return 3
+            return self.max_block
         if self.strategy == StrategyEnum.SCAN:
-            return 3
+            return self.max_block
         if self.strategy == StrategyEnum.FRESH:
-            return 3
+            return self.max_block
