@@ -28,8 +28,6 @@ class PoolLoader:
         all_pools = uniswap_pools + balancer_pools + sushiswap_pools + yaml_pools
         pools_with_only_tokens = self._filter_only_tokens(all_pools)
         pools_without_blacklist = self._filter_blacklist_pools(pools_with_only_tokens)
-        print(f"Found {len(pools_without_blacklist)} pools!")
-        sys.stdout.flush()
         return pools_without_blacklist
 
     def _filter_only_tokens(self, pools: List[Pool]) -> List[Pool]:
