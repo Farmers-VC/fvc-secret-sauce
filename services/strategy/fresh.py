@@ -28,7 +28,7 @@ class StrategyFresh:
 
     def _load_recent_arbitrage_path(self) -> List[ArbitragePath]:
         try:
-            print("Fetching fresh pools and finding new arbitrage paths")
+            start_time = time.time()
             sys.stdout.flush()
             pools = self.pool_loader.load_all_pools()
             path_finder = PathFinder(pools, self.config)
@@ -37,10 +37,8 @@ class StrategyFresh:
                 pools, self.ethereum, self.config, consecutive=self.consecutive
             )
             print(
-                stylize(
-                    f"Found {len(pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
-                    fg("yellow"),
-                )
+                f"Finish fetching pools & detecting paths (%s)"
+                % (time.time() - start_time)
             )
             sys.stdout.flush()
         except Exception as e:

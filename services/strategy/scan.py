@@ -2,7 +2,6 @@ import time
 from typing import List
 import sys
 
-from colored import fg, stylize
 from web3 import Web3
 
 from config import Config
@@ -29,13 +28,6 @@ class StrategyScan:
 
     def scan_arbitrage(self):
         arbitrage_paths: List[ArbitragePath] = self.path_finder.find_all_paths()
-        print(
-            stylize(
-                f"Found {len(self.pools)} pools and {len(arbitrage_paths)} arbitrage paths..",
-                fg("yellow"),
-            )
-        )
-        sys.stdout.flush()
         current_block = self.ethereum.w3.eth.blockNumber
         while True:
             if current_block % 200 == 0:

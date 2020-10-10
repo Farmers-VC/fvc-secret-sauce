@@ -10,6 +10,7 @@ from services.ttypes.arbitrage import ArbitragePath, ConnectingPath
 class PathFinder:
     def __init__(self, pools: List[Pool], config: Config) -> None:
         self.config = config
+        self.num_pools = len(pools)
         self.pools_by_token: Dict[str, List[Pool]] = defaultdict(list)
         for pool in pools:
             for token in pool.tokens:
@@ -41,6 +42,11 @@ class PathFinder:
                 all_arbitrage_paths.append(
                     ArbitragePath(connecting_paths=combined_path)
                 )
+        print(
+            f"Out of {self.num_pools} pools (Uniswap/Balancer/Sushiswap), PathFinder detected {len(all_arbitrage_paths)} paths:"
+        )
+        for path in all_arbitrage_paths:
+            path.print_path()
         return all_arbitrage_paths
 
     def _find_connecting_paths(
