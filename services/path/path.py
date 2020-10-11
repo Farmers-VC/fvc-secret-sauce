@@ -45,11 +45,11 @@ class PathFinder:
                     continue
                 all_arbitrage_paths.append(arb_path)
                 existing_paths.add(arb_path.path_id)
+        for path in all_arbitrage_paths:
+            path.print_path()
         print(
             f"Out of {self.num_pools} pools (Uniswap/Balancer/Sushiswap), PathFinder detected {len(all_arbitrage_paths)} paths:"
         )
-        for path in all_arbitrage_paths:
-            path.print_path()
         return all_arbitrage_paths
 
     def _find_connecting_paths(
