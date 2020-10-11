@@ -1,11 +1,12 @@
-import time
-import requests
 import sys
+import time
 from typing import List
+
+import requests
 from web3 import Web3
 
+from config import MASK_ADDRESS, Config
 from services.ethereum.ethereum import Ethereum
-from config import Config, MASK_ADDRESS
 
 
 def timer(method):
@@ -59,5 +60,7 @@ def heartbeat(config: Config) -> None:
     slack_webhook = config.get("SLACK_HEARTBEAT_WEBHOOK")
     requests.post(
         slack_webhook,
-        json={"text": f"[{config.strategy.name}] Heartbeat"},
+        json={
+            "text": f"[{config.strategy.name}][Liquidity: {config.min_liquidity} -> {config.max_liquidity}][Tokens: {config.only_tokens}] Heartbeat"
+        },
     )
