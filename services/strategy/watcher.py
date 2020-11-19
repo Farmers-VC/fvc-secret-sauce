@@ -90,8 +90,6 @@ class StrategyWatcher:
             for watcher in watcher_list:
                 if watcher in paths_by_token:
                     paths = list(paths_by_token[watcher].values())
-                    for p in paths:
-                        p.print_path()
                     self.arbitrage.calc_arbitrage_and_print(
                         paths, latest_block, gas_price
                     )
