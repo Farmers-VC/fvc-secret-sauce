@@ -10,7 +10,7 @@ ETHERSCAN_API_KEY = os.environ["ETHERSCAN_API_KEY"]
 ETHERSCAN_API = "https://api.etherscan.io/api"
 
 # Ethereum
-ETHEREUM_WS_URI = os.environ["ETHEREUM_WS_URI"]
+# ETHEREUM_WS_URI = os.environ["ETHEREUM_WS_URI"]
 ETHEREUM_HTTP_URI = os.environ["ETHEREUM_HTTP_URI"]
 EXECUTOR_ADDRESS = os.environ["EXECUTOR_ADDRESS"]
 MY_SOCKS = os.environ["MY_SOCKS"]

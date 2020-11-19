@@ -52,6 +52,15 @@ class PathFinder:
         )
         return all_arbitrage_paths
 
+    def find_all_paths_by_token(self) -> Dict[str, Dict[str, ArbitragePath]]:
+        paths_by_token_addr: Dict[str, Dict[str, ArbitragePath]] = {}
+        arb_paths = self.find_all_paths()
+        for path in arb_paths:
+            for token_path in path.connecting_paths:
+                paths_by_token_addr[token_path.token_in.address] = {path.path_id: path}
+                paths_by_token_addr[token_path.token_out.address] = {path.path_id: path}
+        return paths_by_token_addr
+
     def _find_connecting_paths(
         self, step: int, token_in: Token, previous_pool: Pool = None
     ) -> List[List[ConnectingPath]]:

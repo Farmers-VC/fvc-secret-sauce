@@ -20,8 +20,26 @@ class PoolLoader:
         if self.config.kovan:
             return self._load_pools_yaml()
 
-        uniswap_pools = self._load_uniswap_pools()
-        balancer_pools = self._load_balancer_pools()
+        uniswap_pools = []
+        balancer_pools = []
+
+        min_max_liq = (
+            [(self.config.min_liquidity, self.config.max_liquidity)]
+            if self.config.min_liquidity and self.config.max_liquidity
+            else [
+                (5000, 20000),
+                (20001, 50000),
+                (50001, 100000),
+                (100001, 500000),
+                (500001, 2000000),
+                (2000001, 10000000),
+                (10000001, 500000000),
+            ]
+        )
+
+        for (min_liq, max_liq) in min_max_liq:
+            uniswap_pools += self._load_uniswap_pools(min_liq, max_liq)
+            balancer_pools += self._load_balancer_pools(min_liq, max_liq)
         sushiswap_pools = []  # self._load_sushiswap_pools()
 
         yaml_pools = self._load_pools_yaml()
@@ -59,15 +77,15 @@ class PoolLoader:
 
         return filtered_pools
 
-    def _load_uniswap_pools(self) -> List[Pool]:
+    def _load_uniswap_pools(self, min_liquidity: int, max_liquidity: int) -> List[Pool]:
         # https://thegraph.com/explorer/subgraph/uniswap/uniswap-v2?selected=playground
         query = f"""
             {{
                 pairs(
                     first: 1000,
                     where: {{
-                        reserveUSD_lt: {self.config.max_liquidity},
-                        reserveUSD_gt: {self.config.min_liquidity},
+                        reserveUSD_lt: {max_liquidity},
+                        reserveUSD_gt: {min_liquidity},
                     }},
                     orderBy: volumeUSD,
                     orderDirection: desc){{
@@ -163,7 +181,11 @@ class PoolLoader:
             )
         return pools
 
-    def _load_balancer_pools(self) -> List[Pool]:
+    def _load_balancer_pools(
+        self,
+        min_liquidity: int,
+        max_liquidity: int,
+    ) -> List[Pool]:
         # https://thegraph.com/explorer/subgraph/balancer-labs/balancer
         query = f"""
             {{
@@ -172,8 +194,8 @@ class PoolLoader:
                     where: {{
                         publicSwap: true,
                         tokensCount:2,
-                        liquidity_lt: {self.config.max_liquidity},
-                        liquidity_gt: {self.config.min_liquidity},
+                        liquidity_lt: {max_liquidity},
+                        liquidity_gt: {min_liquidity},
                     }},
                     orderBy: totalSwapVolume,
                     orderDirection: desc

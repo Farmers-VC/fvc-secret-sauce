@@ -17,8 +17,8 @@ class Ethereum:
         self._init_web3()
 
     def _init_web3(self) -> None:
-        self.w3 = Web3(Web3.WebsocketProvider(self.config.get("ETHEREUM_WS_URI")))
-        self.w3_http = Web3(Web3.HTTPProvider(self.config.get("ETHEREUM_HTTP_URI")))
+        # self.w3 = Web3(Web3.WebsocketProvider(self.config.get("ETHEREUM_WS_URI")))
+        self.w3 = Web3(Web3.HTTPProvider(self.config.get("ETHEREUM_HTTP_URI")))
 
         gas_strategy = construct_time_based_gas_price_strategy(
             max_wait_seconds=5, sample_size=1, probability=98, weighted=True
