@@ -126,3 +126,5 @@ class Config:
             return self.max_block
         if self.strategy == StrategyEnum.FRESH:
             return self.max_block
+        if self.strategy == StrategyEnum.WATCHER:
+            return self.max_block

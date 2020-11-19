@@ -90,11 +90,29 @@ class StrategyWatcher:
             for watcher in watcher_list:
                 if watcher in paths_by_token:
                     paths = list(paths_by_token[watcher].values())
-                    self.arbitrage.calc_arbitrage_and_print(
+                    positive_arb = self.arbitrage.calc_arbitrage_and_print(
                         paths, latest_block, gas_price
                     )
+                    if positive_arb and self.consecutive > 1:
+                        self._focus_positive_arb(current_block, positive_arb, gas_price)
+                        break
+
             print(
                 f"--- {current_block} Ended in %s seconds --- (Gas: {self.ethereum.w3.fromWei(gas_price, 'gwei')})"
                 % (time.time() - start_time)
             )
             sys.stdout.flush()
+
+    def _focus_positive_arb(
+        self, current_block: int, path: ArbitragePath, gas_price: int
+    ) -> None:
+        print(f"Focus on one Path until we find {self.consecutive} arbs")
+        for _ in range(self.consecutive - 1):
+            latest_block = wait_new_block(self.ethereum, current_block)
+            current_block = latest_block
+            if not self.arbitrage.calc_arbitrage_and_print(
+                [path], latest_block, gas_price
+            ):
+                print("Could not find subsequent arbitrage")
+                return
+        return

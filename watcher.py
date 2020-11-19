@@ -58,7 +58,7 @@ def watcher(
     )
     sys.stdout.flush()
     config = Config(
-        strategy=StrategyEnum.FRESH,
+        strategy=StrategyEnum.WATCHER,
         kovan=kovan,
         debug=debug,
         send_tx=send_tx,

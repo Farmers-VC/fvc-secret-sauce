@@ -30,7 +30,8 @@ class PrinterContract:
         arbitrage_path: ArbitragePath,
         latest_block: int,
         tx_hash: str = "",
-    ) -> None:
+    ) -> bool:
+        self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
         """Return True if arbitrage is/would have been successful on-chain, False otherwise"""
         if self._safety_send(arbitrage_path) and self._validate_transactions(
             arbitrage_path
@@ -38,6 +39,7 @@ class PrinterContract:
             self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
             if self.config.send_tx:
                 self._send_transaction_on_chain(arbitrage_path)
+            return True
         else:
             print(
                 stylize(
@@ -46,6 +48,7 @@ class PrinterContract:
                 )
             )
             sys.stdout.flush()
+        return False
 
     def _safety_send(self, arbitrage_path: ArbitragePath) -> bool:
         """This function will simulate sending the transaction on-chain and let us know if it would go through"""

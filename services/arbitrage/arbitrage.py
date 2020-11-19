@@ -42,7 +42,7 @@ class Arbitrage:
         latest_block: int,
         gas_price: int,
         tx_hash: str = "",
-    ) -> None:
+    ) -> ArbitragePath:
         """Calculate Arbitrage opportunities for all paths
         If we find a positive arbitrage, possibly call Printer smart contract
         """
@@ -60,7 +60,9 @@ class Arbitrage:
                 )
 
                 if is_positive_arb:
-                    self.printer.arbitrage_on_chain(arbitrage_path, latest_block)
+                    res = self.printer.arbitrage_on_chain(arbitrage_path, latest_block)
+                    if res and self.config.strategy.WATCHER:
+                        return arbitrage_path
                 else:
                     arbitrage_path.consecutive_arbs = 0
             except Exception as e:
@@ -72,6 +74,7 @@ class Arbitrage:
                 )
                 sys.stdout.flush()
                 continue
+        return None
 
     def _analyze_arbitrage(
         self,
