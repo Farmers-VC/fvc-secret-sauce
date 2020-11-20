@@ -55,25 +55,39 @@ class StrategyWatcher:
     def watch(self):
         paths_by_token = self._load_recent_arbitrage_path()
         current_block = self.ethereum.w3.eth.blockNumber
-        # counter = 1
         transfer_hash = self.ethereum.w3.keccak(
             text="Transfer(address,address,uint256)"
         ).hex()
-        transfer_filters = self.ethereum.w3.eth.filter({"topics": [transfer_hash]})
+        balancer_swap_hash = self.ethereum.w3.keccak(
+            text="LOG_SWAP(address,address,address,uint256,uint256)"
+        ).hex()
+        transfer_filters = self.ethereum.w3.eth.filter(
+            {"topics": [[balancer_swap_hash, transfer_hash]]}
+        )
         while True:
             if current_block % 200 == 0:
                 heartbeat(self.config)
+                paths_by_token = self._load_recent_arbitrage_path()
             latest_block = wait_new_block(self.ethereum, current_block)
             current_block = latest_block
             start_time = time.time()
             addresses_by_tx_hash = defaultdict(set)  # TransactionHash => List[str]
             watcher_list = set()
             for event in transfer_filters.get_new_entries():
-                if event["address"] != self.config.get("WETH_ADDRESS"):
-                    addresses_by_tx_hash[event["transactionHash"]].add(
-                        event["address"].lower()
-                    )
-            if len(addresses_by_tx_hash) == 0:
+                if (
+                    event["topics"][0].hex()
+                    == "0x908fb5ee8f16c6bc9bc3690973819f32a4d4b10188134543c88706e0e1d43378"
+                ):
+                    # Balancer Event
+                    for topic in event["topics"][1:]:
+                        watcher_list.add(topic[12:].hex())
+                else:
+                    # Likely Uniswap
+                    if event["address"] != self.config.get("WETH_ADDRESS"):
+                        addresses_by_tx_hash[event["transactionHash"]].add(
+                            event["address"].lower()
+                        )
+            if len(addresses_by_tx_hash) == 0 and len(watcher_list):
                 continue
             for addresses in addresses_by_tx_hash.values():
                 if len(addresses) > 1:

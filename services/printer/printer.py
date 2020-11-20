@@ -31,7 +31,6 @@ class PrinterContract:
         latest_block: int,
         tx_hash: str = "",
     ) -> bool:
-        self._display_arbitrage(arbitrage_path, latest_block, tx_hash)
         """Return True if arbitrage is/would have been successful on-chain, False otherwise"""
         if self._safety_send(arbitrage_path) and self._validate_transactions(
             arbitrage_path
@@ -72,10 +71,7 @@ class PrinterContract:
 
     def _send_transaction_on_chain(self, arbitrage_path: ArbitragePath) -> None:
         """Trigger the arbitrage transaction on-chain"""
-        if (
-            self.config.strategy == StrategyEnum.FRESH
-            and arbitrage_path.consecutive_arbs < self.consecutive
-        ):
+        if arbitrage_path.consecutive_arbs < self.consecutive:
             return
 
         try:
@@ -168,10 +164,7 @@ class PrinterContract:
         print(stylize(to_print, fg("light_blue")))
         sys.stdout.flush()
 
-        if (
-            self.config.strategy != StrategyEnum.FRESH
-            or arbitrage_path.consecutive_arbs >= self.consecutive
-        ):
+        if arbitrage_path.consecutive_arbs >= self.consecutive:
             if self.config.strategy == StrategyEnum.SNIPE:
                 self.notification.send_snipe_noobs(to_print)
             else:

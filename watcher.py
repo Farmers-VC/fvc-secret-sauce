@@ -13,8 +13,8 @@ from services.ttypes.strategy import StrategyEnum
 @click.option("--send-tx", is_flag=True, help="Flag to activate sending tx on-chain")
 @click.option(
     "--max-amount",
-    default=6.0,
-    help="Set max amount to trade with in WETH (Default: 6.0)",
+    default=5.0,
+    help="Set max amount to trade with in WETH (Default: 5.0)",
 )
 @click.option(
     "--min-amount",

@@ -27,7 +27,8 @@ class PoolLoader:
             [(self.config.min_liquidity, self.config.max_liquidity)]
             if self.config.min_liquidity and self.config.max_liquidity
             else [
-                (5000, 20000),
+                (5000, 10000),
+                (10001, 20000),
                 (20001, 50000),
                 (50001, 100000),
                 (100001, 500000),
