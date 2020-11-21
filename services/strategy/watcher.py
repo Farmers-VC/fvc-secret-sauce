@@ -11,7 +11,7 @@ from services.ethereum.ethereum import Ethereum
 from services.path.path import PathFinder
 from services.pools.loader import PoolLoader
 from services.ttypes.arbitrage import ArbitragePath
-from services.utils import wait_new_block, calculate_gas_price, heartbeat
+from services.utils import wait_new_block, calculate_gas_price
 
 
 class StrategyWatcher:
@@ -66,7 +66,7 @@ class StrategyWatcher:
         )
         while True:
             if current_block % 200 == 0:
-                heartbeat(self.config)
+                # heartbeat(self.config)
                 paths_by_token = self._load_recent_arbitrage_path()
             latest_block = wait_new_block(self.ethereum, current_block)
             current_block = latest_block
