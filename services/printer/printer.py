@@ -163,9 +163,10 @@ class PrinterContract:
         to_print = arbitrage_path.print(latest_block, tx_hash)
         print(stylize(to_print, fg("light_blue")))
         sys.stdout.flush()
+        self.notification.send_slack_arbitrage(to_print)
 
-        if arbitrage_path.consecutive_arbs >= self.consecutive:
-            if self.config.strategy == StrategyEnum.SNIPE:
-                self.notification.send_snipe_noobs(to_print)
-            else:
-                self.notification.send_slack_arbitrage(to_print)
+        # if arbitrage_path.consecutive_arbs >= self.consecutive:
+        #     if self.config.strategy == StrategyEnum.SNIPE:
+        #         self.notification.send_snipe_noobs(to_print)
+        #     else:
+        #         self.notification.send_slack_arbitrage(to_print)

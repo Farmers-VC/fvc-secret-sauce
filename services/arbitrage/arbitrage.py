@@ -94,7 +94,7 @@ class Arbitrage:
             )
 
             if arbitrage_path.max_arbitrage_amount_wei > (
-                arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.05)
+                arbitrage_path.gas_price_execution + self.weth_token.to_wei(0.10)
             ):
                 return True
             else:
